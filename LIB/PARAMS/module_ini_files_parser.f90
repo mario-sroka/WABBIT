@@ -49,7 +49,8 @@ module module_ini_files_parser
   ! type and the dimensionality. vectors can be read without setting a default.
   interface read_param
     module procedure param_sgl, param_dbl, param_int, param_vct, param_str, &
-                     param_bool, param_matrix, param_vct_str,param_vct_bool
+                     param_bool, param_matrix, param_vct_str, param_vct_bool, &
+                     param_intvct
   end interface
 
 
@@ -524,6 +525,58 @@ end subroutine read_intarray_from_ascii_file
       write (*,FORMAT1) trim(section),trim(keyword),adjustl(trim(value))
     endif
   end subroutine param_vct
+
+  subroutine param_intvct (PARAMS, section, keyword, params_vector, defaultvalue)
+    implicit none
+    ! Contains the ascii-params file
+    type(inifile), intent(inout) :: PARAMS
+    character(len=*), intent(in) :: section ! What section do you look for? for example [Resolution]
+    character(len=*), intent(in) :: keyword ! what keyword do you look for? for example nx=128
+    integer(kind=ik) :: params_vector(1:)
+    integer(kind=ik), optional, intent(in) :: defaultvalue(1:)
+
+    integer :: n, m
+    character(len=maxcolumns) :: value
+    character(len=14)::formatstring
+
+    n = size(params_vector,1)
+    ! empty vector??
+    if (n==0) return
+
+    if ( present(defaultvalue) ) then
+      m = size(defaultvalue,1)
+      if (n/=m) then
+        write(*,*) "error: vector and default value are not of the same length"
+      endif
+    endif
+
+    write(formatstring,'("(",i2.2,"(g10.3,1x))")') n
+
+    call GetValue(PARAMS, section, keyword, value)
+
+    if (value .ne. '') then
+      ! read the n values from the vector string
+      read (value, *) params_vector
+      write (value,formatstring) params_vector
+    else
+      if (present(defaultvalue)) then
+        ! return default
+        write (value,formatstring) defaultvalue
+        value = trim(adjustl(value))//" (default!)"
+        params_vector = defaultvalue
+      else
+        ! return zeros
+        params_vector = 0
+        write (value,formatstring) params_vector
+        value = trim(adjustl(value))//" (RETURNING ZEROS - NO DEFAULT SET!)"
+      endif
+    endif
+
+    ! in verbose mode, inform about what we did
+    if (verbosity) then
+      write (*,FORMAT1) trim(section),trim(keyword),adjustl(trim(value))
+    endif
+  end subroutine param_intvct
 
   !-------------------------------------------------------------------------------
   !! \brief

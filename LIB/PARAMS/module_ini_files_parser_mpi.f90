@@ -13,7 +13,8 @@ module module_ini_files_parser_mpi
   ! type and the dimensionality. vectors can be read without setting a default.
   interface read_param_mpi
     module procedure param_dbl_mpi, param_int_mpi, param_vct_mpi, param_str_mpi, &
-                     param_bool_mpi, param_matrix_mpi, param_vct_str_mpi, param_boolvct_mpi
+                     param_bool_mpi, param_matrix_mpi, param_vct_str_mpi, param_boolvct_mpi, &
+                     param_intvct_mpi
   end interface
 
 !!!!!!!!
@@ -280,6 +281,37 @@ end subroutine read_intarray_from_ascii_file_mpi
     call MPI_BCAST( params_vector, n, MPI_DOUBLE_PRECISION, 0, WABBIT_COMM, mpicode )
   end subroutine param_vct_mpi
 
+  subroutine param_intvct_mpi (PARAMS, section, keyword, params_vector, defaultvalue)
+    implicit none
+    ! Contains the ascii-params file
+    type(inifile), intent(inout) :: PARAMS
+    character(len=*), intent(in) :: section ! What section do you look for? for example [Resolution]
+    character(len=*), intent(in) :: keyword ! what keyword do you look for? for example nx=128
+    integer(kind=ik), intent(inout) :: params_vector(1:)
+    integer(kind=ik), optional, intent(in) :: defaultvalue(1:)
+
+    integer :: n
+    integer :: mpicode
+    integer :: mpirank
+
+    ! fetch my process id
+    call MPI_Comm_rank(WABBIT_COMM, mpirank, mpicode)
+
+    n = size(params_vector,1)
+
+    ! Root rank fetches value from PARAMS.ini file (which is in PARAMS)
+    if (mpirank==0) then
+      if (present(defaultvalue)) then
+        call read_param (PARAMS, section, keyword, params_vector, defaultvalue)
+      else
+        call read_param (PARAMS, section, keyword, params_vector)
+      endif
+    endif
+
+    ! And then broadcast
+    call MPI_BCAST( params_vector, n, MPI_DOUBLE_PRECISION, 0, WABBIT_COMM, mpicode )
+  end subroutine param_intvct_mpi
+
 
   !-------------------------------------------------------------------------------
   ! Fetches a STRING VALUED vector parameter from the PARAMS.ini file.
@@ -317,7 +349,6 @@ end subroutine read_intarray_from_ascii_file_mpi
 
     call MPI_BCAST( params_vector, len(params_vector(1))*n, MPI_CHARACTER, 0, WABBIT_COMM, mpicode )
   end subroutine param_vct_str_mpi
-
 
 
   !-------------------------------------------------------------------------------

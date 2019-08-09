@@ -42,7 +42,7 @@ subroutine synchronize_ghosts_generic_sequence( params, lgt_block, hvy_block, hv
     ! if this mpirank has no active blocks, it has nothing to do here.
     if (hvy_n == 0) return
 
-    if (size(hvy_block,4)>N_max_components) then
+    if (size(hvy_block,4)> params%N_max_components) then
         call abort(160720191,"You try to ghost-sync a vector with too many components.")
     endif
 

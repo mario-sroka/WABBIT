@@ -11,7 +11,7 @@ subroutine calculate_time_step( params, time, hvy_block, hvy_active, hvy_n, lgt_
     implicit none
     type (type_params), intent(in):: params                    !< user defined parameter structure
     real(kind=rk), intent(in)     :: time                      !< current time of the simulation
-    real(kind=rk), intent(in)     :: hvy_block(:, :, :, :, :)  !< heavy data array contains the block data of the statevector
+    real(kind=rk), intent(inout)     :: hvy_block(:, :, :, :, :)  !< heavy data array contains the block data of the statevector
     integer(kind=ik), intent(in)  :: hvy_active(:),hvy_n       !< list of active blocks (heavy data) and number of active blocks
     integer(kind=ik), intent(in)  :: lgt_block(:, :),lgt_active(:),lgt_n!< light data array,active list, number of active blocks
     real(kind=rk), intent(out)    :: dt                         !< time step dt

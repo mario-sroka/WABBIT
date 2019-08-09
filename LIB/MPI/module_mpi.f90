@@ -142,7 +142,7 @@ subroutine init_ghost_nodes( params )
         g               = params%n_ghosts
         ! HACK: in the design phase, we thought to always sync neqn commponents
         ! but in some cases we end up synching more!
-        Neqn            = N_MAX_COMPONENTS
+        Neqn            = params%N_max_components
         rank            = params%rank
         Ncpu            = params%number_procs
 

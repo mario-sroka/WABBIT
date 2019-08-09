@@ -15,6 +15,7 @@ module module_physics_metamodule
     use module_ConvDiff_new
     use module_acm
     use module_navier_stokes
+    use module_reactive_navier_stokes
 
     implicit none
 
@@ -66,6 +67,9 @@ contains
         case ('navier_stokes')
             ! not implemented yet
 
+        case ('reactive_navier_stokes')
+            ! /todo implement create mask for reactive navier stokes physics in physics metamodule
+
         case default
             call abort(1212,'unknown physics...say whaaat?')
 
@@ -98,6 +102,9 @@ contains
         case ('navier_stokes')
             call READ_PARAMETERS_NStokes( filename )
 
+        case ('reactive_navier_stokes')
+            call interface_reactive_navier_stokes("read_ini_file", filename=filename)
+
         case default
             call abort(1212,'unknown physics...say whaaat?')
 
@@ -127,7 +134,7 @@ contains
 
         ! block data, containg the state vector. In general a 4D field (3 dims+components)
         ! in 2D, 3rd coindex is simply one. Note assumed-shape arrays
-        real(kind=rk), intent(in) :: u(1:,1:,1:,1:)
+        real(kind=rk), intent(inout) :: u(1:,1:,1:,1:)
 
         ! as you are allowed to compute the RHS only in the interior of the field
         ! you also need to know where 'interior' starts: so we pass the number of ghost points
@@ -155,6 +162,9 @@ contains
 
         case ('navier_stokes')
             call PREPARE_SAVE_DATA_NStokes( time, u, g, x0, dx, work )
+
+        case ('reactive_navier_stokes')
+            call interface_reactive_navier_stokes("prepare_save_data", phi=u, phi_work=work, time=time, dx=dx, x0=x0)
 
         case default
             call abort(88119, "[PREPARE_SAVE_DATA (metamodule)] unknown physics....")
@@ -188,6 +198,9 @@ contains
 
         case ('navier_stokes')
             call FIELD_NAMES_NStokes(N, name)
+
+        case ('reactive_navier_stokes')
+            call interface_reactive_navier_stokes("field_names", dF=N, dFname=name)
 
         case default
             call abort(88119, "[FIELD_NAMES (metamodule):] unknown physics....")
@@ -260,6 +273,10 @@ contains
         case ("navier_stokes")
             call RHS_NStokes( time, u, g, x0, dx, rhs, stage, boundary_flag )
 
+        case ('reactive_navier_stokes')
+            call interface_reactive_navier_stokes("rhs", time=time, phi=u, x0=x0, dx=dx, rhs=rhs, &
+                 stage=stage)
+
         case default
             call abort(2152000, "[RHS_wrapper.f90]: physics_type is unknown"//physics)
 
@@ -320,6 +337,10 @@ contains
         case ("navier_stokes")
             call STATISTICS_NStokes( time, u, g, x0, dx, stage )
 
+        case ('reactive_navier_stokes')
+            call interface_reactive_navier_stokes("statistics", time=time, phi=u, phi_work=rhs, &
+                 x0=x0, dx=dx, stage=stage)
+
         case default
             call abort(2152000, "[RHS_wrapper.f90]: physics_type is unknown"//physics)
 
@@ -342,7 +363,7 @@ contains
 
         ! block data, containg the state vector. In general a 4D field (3 dims+components)
         ! in 2D, 3rd coindex is simply one. Note assumed-shape arrays
-        real(kind=rk), intent(in) :: u(1:,1:,1:,1:)
+        real(kind=rk), intent(inout) :: u(1:,1:,1:,1:)
 
         ! as you are allowed to compute the RHS only in the interior of the field
         ! you also need to know where 'interior' starts: so we pass the number of ghost points
@@ -368,6 +389,9 @@ contains
         case ('navier_stokes')
             ! navier stokes
             call GET_DT_BLOCK_NStokes( time, u, Bs, g, x0, dx, dt )
+
+        case ('reactive_navier_stokes')
+            call interface_reactive_navier_stokes("get_dt", time=time, phi=u, x0=x0, dx=dx, dt=dt)
 
         case default
             call abort('phycics module unkown.')
@@ -410,6 +434,9 @@ contains
 
         case ("navier_stokes")
             call INICOND_NStokes( time, u, g, x0, dx )
+
+        case ("reactive_navier_stokes")
+            call interface_reactive_navier_stokes("initialize_data", phi=u, x0=x0, dx=dx)
 
         case default
             call abort(999,"[INICOND (metamodule):] unkown physics. Its getting hard to find qualified personel.")
@@ -467,6 +494,9 @@ contains
 
         case ("navier_stokes")
             call filter_NStokes( time, u, g, x0, dx, work_array, boundary_flag)
+
+        case ("reactive_navier_stokes")
+            call interface_reactive_navier_stokes("filter_data", phi=u, phi_work=work_array, x0=x0, dx=dx)
 
         case default
             call abort(2152001, "ERROR [filter_wrapper.f90]: physics_type is unknown "//trim(adjustl(physics)))

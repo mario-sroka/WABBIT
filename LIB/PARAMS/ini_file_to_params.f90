@@ -238,6 +238,7 @@ end subroutine ini_file_to_params
     !> power used for dimensionality (d=2 or d=3)
     integer(kind=ik) :: i
     real(kind=rk), dimension(:), allocatable  :: tmp
+    integer(kind=ik), dimension(:), allocatable  :: tmp_int
     if (params%rank==0) then
       write(*,*)
       write(*,*)
@@ -280,20 +281,51 @@ end subroutine ini_file_to_params
     call read_param_mpi(FILE, 'Blocks', 'N_dt_per_grid', params%N_dt_per_grid, 1_ik )
 
     ! Which components of the state vector (if indicator is "threshold-state-vector") shall we
-    ! use? in ACM, it can be good NOT to apply it to the pressure.
-    allocate(tmp(1:params%n_eqn))
-    allocate(params%threshold_state_vector_component(1:params%n_eqn))
-    ! as default, use ones (all components used for indicator)
-    tmp = 1.0_rk
-    call read_param_mpi(FILE, 'Blocks', 'threshold_state_vector_component',  tmp, tmp )
-    do i = 1, params%n_eqn
-        if (tmp(i)>0.0_rk) then
-            params%threshold_state_vector_component(i) = .true.
-        else
-            params%threshold_state_vector_component(i) = .false.
-        endif
-    enddo
-    deallocate(tmp)
+    select case(params%coarsening_indicator)
+    
+        case('threshold-state-vector')
+            ! use? in ACM, it can be good NOT to apply it to the pressure.
+            allocate(tmp(1:params%n_eqn))
+            allocate(params%threshold_state_vector_component(1:params%n_eqn))
+            ! as default, use ones (all components used for indicator)
+            tmp = 1.0_rk
+            call read_param_mpi(FILE, 'Blocks', 'threshold_state_vector_component',  tmp, tmp )
+            do i = 1, params%n_eqn
+                 if (tmp(i)>0.0_rk) then
+                     params%threshold_state_vector_component(i) = .true.
+                 else
+                     params%threshold_state_vector_component(i) = .false.
+                 endif
+            enddo
+            deallocate(tmp)
+
+         case('threshold-state-vector-rns')
+             ! threshold state vector for reactive navier stokes: need list of state vector indexes
+
+             ! read number of components for thresholding
+             call read_param_mpi(FILE, 'Blocks', 'number_of_threshold_state_vector_components', params%number_of_threshold_state_vector_components, params%n_eqn )
+
+             ! allocate dummy fields
+             allocate(tmp_int(1:params%number_of_threshold_state_vector_components))
+             allocate(params%threshold_state_vector_component(1:params%number_of_threshold_state_vector_components))
+
+             ! default values are .false.
+             params%threshold_state_vector_component = .false.
+
+             ! read values from ini file
+             call read_param_mpi(FILE, 'Blocks', 'threshold_state_vector_component', tmp_int, tmp_int )
+             do i = 1, params%number_of_threshold_state_vector_components
+                 params%threshold_state_vector_component(tmp_int(i)) = .true.
+             end do
+             
+             ! clean up
+             deallocate(tmp_int)
+
+     end select
+
+    ! number of maximal components for ghost nodes synchronizing
+    ! note: do not change default value!
+    call read_param_mpi(FILE, 'Blocks', 'N_max_components', params%N_max_components, 6 )
 
   end subroutine ini_blocks
 

@@ -78,6 +78,7 @@ module module_params
         ! order of spatial discretization
         character(len=80)                            :: order_discretization=""
         character(len=80)                            :: coarsening_indicator="threshold-state-vector"
+        integer(kind=ik)                             :: number_of_threshold_state_vector_components
         logical, allocatable                         :: threshold_state_vector_component(:)
         ! deside if WABBIT should start from input files
         logical                                       :: read_from_files
@@ -125,6 +126,9 @@ module module_params
         integer(kind=ik) :: rank=-1
         ! number of processes
         integer(kind=ik) :: number_procs=-1
+        ! number of maximal components for ghost nodes synchronizing
+        integer(kind=ik) :: N_max_components=6
+
         ! -------------------------------------------------------------------------------------
         ! bridge
         ! -------------------------------------------------------------------------------------

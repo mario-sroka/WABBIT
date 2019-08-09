@@ -20,7 +20,8 @@ MFILES = module_precision.f90 module_globals.f90 module_params.f90 module_timing
 	module_bridge.f90 module_navier_stokes_params.f90 module_helpers.f90 module_insects_integration_flusi_wabbit.f90 \
 	module_insects.f90 module_boundary_conditions.f90 module_funnel.f90 module_navier_stokes_cases.f90\
 	module_simple_geometry.f90 module_shock.f90 module_pipe_flow.f90 module_forest.f90 \
-	module_MOR.f90 module_sparse_operators.f90 module_stl_file_reader.f90 module_mask.f90
+	module_MOR.f90 module_sparse_operators.f90 module_stl_file_reader.f90 module_mask.f90 \
+        module_reactive_navier_stokes_params.f90 module_reactive_navier_stokes.f90
 MOBJS := $(MFILES:%.f90=$(OBJDIR)/%.o)
 
 # Source code directories (colon-separated):
@@ -30,6 +31,7 @@ VPATH += :LIB/PARAMS:LIB/TREE:LIB/INDICATORS:LIB/GEOMETRY:LIB/EQUATION/ACMnew
 VPATH += :LIB/OPERATORS:LIB/EQUATION/convection-diffusion:LIB/POSTPROCESSING:LIB/EQUATION/navier_stokes
 VPATH += :LIB/EQUATION/navier_stokes:LIB/EQUATION/navier_stokes/case_study:LIB/MPI/BRIDGE
 VPATH += :LIB/EQUATION/insects:LIB/BOUNDARYCONDITIONS:LIB/FOREST
+VPATH += :LIB/EQUATION/REACTIVE_NAVIER_STOKES
 
 # Set the default compiler if it's not already set
 ifndef $(FC)
@@ -74,9 +76,14 @@ HDF_LIB = $(HDF_ROOT)/lib
 HDF_INC = $(HDF_ROOT)/include
 LDFLAGS += $(HDF5_FLAGS) -L$(HDF_LIB) -L$(HDF_LIB)64 $(SB_LIB) -lhdf5_fortran -lhdf5 -lz -ldl -lm -lblas -llapack
 FFLAGS += -I$(HDF_INC) $(SB_INCL)
+# CANTERA_ROOT is set in environment.
+CANTERA_LIB = $(CANTERA_ROOT)/lib
+CANTERA_INC = $(CANTERA_ROOT)/include/cantera
+LDFLAGS += $(CANTERA_FLAGS) -L$(CANTERA_LIB) -L$(CANTERA_LIB)64 -lcantera -lcantera_fortran -lcantera_shared -lstdc++ -lz -ldl -lm
+FFLAGS += -I$(CANTERA_INC)
 # for GNU/gfortran, use -D for example: "PRAGMAS=-DTEST" will turn "#ifdef TEST" to true in the code
 # different pragmas are space-separated
-PRAGMAS = #-DSBLAS
+PRAGMAS = -DCANTERA #-DSBLAS
 endif
 
 #-------------------------------------------------------------------------------
@@ -96,9 +103,14 @@ HDF_LIB = $(HDF_ROOT)/lib
 HDF_INC = $(HDF_ROOT)/include
 LDFLAGS += $(HDF5_FLAGS) -L$(HDF_LIB) -L$(HDF_LIB)64 -lhdf5_fortran -lhdf5 -lz -ldl -lm -llapack -lblas
 FFLAGS += -I$(HDF_INC)
+# CANTERA_ROOT is set in environment.
+CANTERA_LIB = $(CANTERA_ROOT)/lib
+CANTERA_INC = $(CANTERA_ROOT)/include
+LDFLAGS += $(CANTERA_FLAGS) -L$(CANTERA_LIB) -L$(CANTERA_LIB)64 -lcantera -lcantera_fortran -lcantera_shared -lstdc++ -lz -ldl -lm
+FFLAGS += -I$(CANTERA_INC)
 # for intel, use -D for example: PRAGMAS=-DIFORT will turn #ifdef IFORT to true in the code
 # different pragmas are space-separated
-PRAGMAS = #
+PRAGMAS = -DCANTERA #
 endif
 
 #-------------------------------------------------------------------------------
@@ -117,7 +129,7 @@ PPFLAG=-qsuffix=cpp=f90  #preprocessor flag
 # for IBMXLF95 PRAGMAS=-WF,-DIFORT will turn #ifdef IFORT to true in the code
 # here different PRAGMAS are comma separated (NO SPACES!!!)
 # NOTE first pragma (if any is used) MUST be -WF,
-PRAGMAS = #-WF,-DTEST
+PRAGMAS = -DCANTERA  #-WF,-DTEST
 endif
 
 # add the PRAGMAS to FFLAGS: (for all compilers)
@@ -222,6 +234,18 @@ $(OBJDIR)/module_ConvDiff_new.o: module_ConvDiff_new.f90 rhs_convdiff.f90 \
 	$(OBJDIR)/module_ini_files_parser_mpi.o $(OBJDIR)/module_globals.o
 	$(FC) $(FFLAGS) -c -o $@ $< $(LDFLAGS)
 
+$(OBJDIR)/module_reactive_navier_stokes_params.o: module_reactive_navier_stokes_params.f90
+	$(FC) $(FFLAGS) -c -o $@ $< $(LDFLAGS)
+	
+$(OBJDIR)/module_reactive_navier_stokes.o: module_reactive_navier_stokes.f90 \
+	$(OBJDIR)/module_precision.o $(OBJDIR)/module_ini_files_parser_mpi.o $(OBJDIR)/module_reactive_navier_stokes_params.o \
+        IO/read_parameter_wabbit_core.f90 IO/field_names_reactive_ns.f90 IO/read_parameter_combustion.f90 IO/read_parameter_chemistry.f90 \
+        IO/prepare_saved_data_reactive_ns.f90 IO/convert_to_primitive.f90 INI/inicond_zero_velocity.f90 INI/inicond_spark.f90 \
+        INI/inicond_blob.f90 IO/compute_temperature.f90 IO/compute_reaction_rate.f90 FILTER/filter_reactive_ns.f90 \
+        FILTER/explicit_filter.f90 FILTER/filter_1D.f90 RHS/RHS_wrapper_reactive_ns.f90 RHS/RHS_3D_CANTERA_navier_stokes_reactive_periodicBC.f90 \
+        RHS/diff_wrapper_3D.f90
+	$(FC) $(FFLAGS) -c -o $@ $< $(LDFLAGS)
+
 $(OBJDIR)/module_timing.o: module_timing.f90
 	$(FC) $(FFLAGS) -c -o $@ $< $(LDFLAGS)
 
@@ -232,7 +256,8 @@ $(OBJDIR)/module_interpolation.o: module_interpolation.f90 $(OBJDIR)/module_para
 	$(FC) $(FFLAGS) -c -o $@ $< $(LDFLAGS)
 
 $(OBJDIR)/module_physics_metamodule.o: module_physics_metamodule.f90 $(OBJDIR)/module_globals.o \
-	$(OBJDIR)/module_ConvDiff_new.o $(OBJDIR)/module_navier_stokes.o $(OBJDIR)/module_ACM.o
+	$(OBJDIR)/module_ConvDiff_new.o $(OBJDIR)/module_navier_stokes.o $(OBJDIR)/module_ACM.o \
+        $(OBJDIR)/module_reactive_navier_stokes.o
 	$(FC) $(FFLAGS) -c -o $@ $< $(LDFLAGS)
 
 $(OBJDIR)/module_hdf5_wrapper.o: module_hdf5_wrapper.f90 $(OBJDIR)/module_params.o $(OBJDIR)/module_globals.o

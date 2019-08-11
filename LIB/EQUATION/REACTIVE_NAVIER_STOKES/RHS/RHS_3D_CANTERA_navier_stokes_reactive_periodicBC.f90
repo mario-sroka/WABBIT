@@ -72,7 +72,7 @@ subroutine RHS_3D_CANTERA_navier_stokes_reactive_periodicBC(params_physics, Bs, 
 
 
     ! inverse sqrt(rho) field 
-    real(kind=rk)                                           :: phi1_inv(Bs(1)+2*g, Bs(2)+2*g, Bs(2)+2*g)
+    real(kind=rk)                                           :: phi1_inv(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
 
     ! loop variables
     integer(kind=ik)                                        :: i, j, k, n

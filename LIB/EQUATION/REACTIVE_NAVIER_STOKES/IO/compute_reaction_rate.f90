@@ -90,8 +90,8 @@ subroutine compute_reaction_rate( params_physics, phi, phi_work, gas )
      else
 
          ! loop over all nodes and use cantera function
-         do j = 1, Bs(1)+g+g
-             do i = 1, Bs(2)+g+g
+         do j = 1, Bs(2)+g+g
+             do i = 1, Bs(1)+g+g
                  do k = 1, Bs(3)+g+g
 
                      dummy = 0.0_rk

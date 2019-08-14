@@ -70,14 +70,14 @@ subroutine read_parameter_chemistry( params_physics, filename, gas )
     ! FLUID
     !-----------------------------------------------------------------------------------------
     ! read fluid properties
-!    call read_param_mpi(FILE, 'FLUID', 'gamma_', params_physics%gamma_, 0.0_rk )
-!    call read_param_mpi(FILE, 'FLUID', 'Rs', params_physics%Rs, 0.0_rk )
-!    params_physics%Cv = params_physics%Rs/(params_physics%gamma_-1.0_rk)
-!    params_physics%Cp = params_physics%Cv*params_physics%gamma_
-!    call read_param_mpi(FILE, 'FLUID', 'Pr', params_physics%Pr, 0.0_rk )
-!    call read_param_mpi(FILE, 'FLUID', 'mu0', params_physics%mu0, 0.0_rk )
+    call read_param_mpi(FILE, 'FLUID', 'gamma_', params_physics%gamma_, 0.0_rk )
+    call read_param_mpi(FILE, 'FLUID', 'Rs', params_physics%Rs, 0.0_rk )
+    params_physics%Cv = params_physics%Rs/(params_physics%gamma_-1.0_rk)
+    params_physics%Cp = params_physics%Cv*params_physics%gamma_
+    call read_param_mpi(FILE, 'FLUID', 'Pr', params_physics%Pr, 0.0_rk )
+    call read_param_mpi(FILE, 'FLUID', 'mu0', params_physics%mu0, 0.0_rk )
     call read_param_mpi(FILE, 'FLUID', 'dissipation', params_physics%dissipation, .true. )
-!    call read_param_mpi(FILE, 'FLUID', 'viscosity_model', params_physics%viscosity_model, '---' )
+    call read_param_mpi(FILE, 'FLUID', 'viscosity_model', params_physics%viscosity_model, '---' )
 
     !-----------------------------------------------------------------------------------------
     ! CHEM

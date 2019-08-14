@@ -81,9 +81,11 @@ module module_params
         integer(kind=ik)                             :: number_of_threshold_state_vector_components
         logical, allocatable                         :: threshold_state_vector_component(:)
         ! deside if WABBIT should start from input files
-        logical                                       :: read_from_files
+        logical                                      :: read_from_files
         ! files we want to read for inital cond.
-        character(len=80), dimension(:), allocatable  :: input_files
+        character(len=80), dimension(:), allocatable :: input_files
+        ! time we want to restart
+        real(kind=rk)                                :: input_time = -1.0_rk
 
         ! grid parameter
         integer(kind=ik), dimension(3)               :: Bs=(/ 0, 0, 0 /)      ! number of block nodes

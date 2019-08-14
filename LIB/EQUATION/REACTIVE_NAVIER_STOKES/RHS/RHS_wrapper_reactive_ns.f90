@@ -91,19 +91,29 @@ subroutine RHS_wrapper_reactive_ns( params_physics, time, phi, phi_work, x0, dx,
         ! the second stage then is what you would usually do: evaluate local differential
         ! operators etc.
 
-        if    ( params_physics%chemistry_model == "cantera" .and. &
-                periodic ) then
+        if     ( params_physics%chemistry_model == "cantera" .and. &
+                 periodic ) then
 
-                !-------------------------------------------------------------------------
-                if (params_physics%d == 2) then
-                    ! /todo
+                 !-------------------------------------------------------------------------
+                 if (params_physics%d == 2) then
+                     ! /todo
+                 else
+                     call RHS_3D_CANTERA_navier_stokes_reactive_periodicBC( params_physics, params_physics%Bs, &
+                     params_physics%g, params_physics%NdF, x0, dx, phi(:,:,:,:), rhs(:,:,:,:), gas )
                 
-                else
+                 end if
 
-                    call RHS_3D_CANTERA_navier_stokes_reactive_periodicBC( params_physics, params_physics%Bs, &
-                    params_physics%g, params_physics%NdF, x0, dx, phi(:,:,:,:), rhs(:,:,:,:), gas )
+        elseif ( params_physics%chemistry_model == "inert" .and. &
+                 periodic ) then
 
-                end if
+                 !-------------------------------------------------------------------------
+                 if (params_physics%d == 2) then
+                     ! /todo
+                 else
+                     call RHS_3D_navier_stokes_non_reactive_periodicBC(params_physics, params_physics%Bs, &
+                     params_physics%g, params_physics%NdF, x0, dx, phi(:,:,:,:), rhs(:,:,:,:), time)
+
+                 end if
 
         else
                 !-------------------------------------------------------------------------

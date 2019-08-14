@@ -39,7 +39,7 @@ subroutine RHS_3D_CANTERA_navier_stokes_reactive_periodicBC(params_physics, Bs, 
     !> rhs parameter
     real(kind=rk), dimension(3), intent(in)                 :: x0, delta_x
     !> datafields
-    real(kind=rk), intent(in)                               :: phi(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g, NdF)
+    real(kind=rk), intent(inout)                            :: phi(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g, NdF)
     ! rhs array
     real(kind=rk),intent(inout)                             :: rhs(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g, NdF)
     !> Cantera gas mixture struct
@@ -114,26 +114,20 @@ subroutine RHS_3D_CANTERA_navier_stokes_reactive_periodicBC(params_physics, Bs, 
     dissipation = params_physics%dissipation
 
     ! primitive variables
-    do k = 1, Bs(3)+2*g
-       do j = 1, Bs(2)+2*g
-            do i = 1, Bs(1)+2*g
-
-                rho(i,j,k)       = phi(i,j,k,rhoF) * phi(i,j,k,rhoF)
-                phi1_inv(i,j,k)  = 1.0_rk / phi(i,j,k,rhoF)
-                u(i,j,k)         = phi(i,j,k,UxF) * phi1_inv(i,j,k)
-                v(i,j,k)         = phi(i,j,k,UyF) * phi1_inv(i,j,k)
-                w(i,j,k)         = phi(i,j,k,UzF) * phi1_inv(i,j,k)
-                es(i,j,k)        = phi(i,j,k,EF) * phi1_inv(i,j,k) * phi1_inv(i,j,k)
-
-                Y(i,j,k,params_physics%species) = 1.0_rk
-                do n = 1, params_physics%species-1
-                    Y(i,j,k,n)         = phi(i,j,k,YF+n-1) * phi1_inv(i,j,k) * phi1_inv(i,j,k)
-                    Y(i,j,k,params_physics%species) = Y(i,j,k,params_physics%species) - Y(i,j,k,n)
-                end do
-
-            end do
-        end do
+    ! use rhs as dummy fields
+    call convert_to_primitive( params_physics, phi, rhs )
+ 
+    rho = rhs(:,:,:,rhoF)
+    u   = rhs(:,:,:,UxF)
+    v   = rhs(:,:,:,UyF)
+    w   = rhs(:,:,:,UzF)
+    es  = rhs(:,:,:,EF)
+    do n = 1, params_physics%species
+        Y(:,:,:,n) = rhs(:,:,:,YF+n-1)
     end do
+
+    ! compute 1/rho for better performance
+    phi1_inv(:,:,:)  = 1.0_rk / phi(:,:,:,rhoF)
 
     ! Compute Rs, W, X, D
     if (dissipation) then

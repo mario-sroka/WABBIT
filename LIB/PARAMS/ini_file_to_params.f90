@@ -48,6 +48,9 @@ subroutine ini_file_to_params( params, filename )
     integer(kind=ik)                                :: d,i, Nblocks_Jmax, g, Neqn, Nrk
     integer(kind=ik), dimension(3)                  :: Bs
 
+    ! dummy file name array
+    character(len=80), allocatable                  :: dummy_name(:)
+
 !---------------------------------------------------------------------------------------------
 ! variables initialization
 
@@ -83,18 +86,42 @@ subroutine ini_file_to_params( params, filename )
     ! and never the entire grid as such.
     call read_param_mpi(FILE, 'Physics', 'read_from_files', params%read_from_files, .false. )
 
-    if (params%read_from_files ) then
-        ! read variable names
-        allocate( params%input_files( params%n_eqn ) )
-
-        params%input_files = "---"
-        call read_param_mpi(FILE, 'Physics', 'input_files', params%input_files, params%input_files)
-    end if
-
     ! wabbit does need to know how many fiels are written to disk when saving is triggered.
     ! e.g. saving ux, uy and p would mean 3. The names of these files as well as their contents
     ! are defined by the physics modules.
     call read_param_mpi(FILE, 'Saving', 'N_fields_saved', params%N_fields_saved, 3 )
+
+    if (params%read_from_files ) then
+        ! read variable names
+        allocate( params%input_files( params%n_eqn ) )
+
+        ! alternatively to explicitly file names, you can start from a given input time
+        ! if a input time >= 0 is read, then the file names are computed, not read
+        ! so: if you want to use file names, set time to any value lower than 0    
+        ! --------------------------------------------------------------------------------
+        call read_param_mpi(FILE, 'Physics', 'input_time', params%input_time, -1.0_rk )
+
+        if ( params%input_time < 0.0_rk ) then
+            ! read file names
+            params%input_files = "---"
+            call read_param_mpi(FILE, 'Physics', 'input_files', params%input_files, params%input_files)
+        
+        else
+
+            ! read file names to dummy array, assume first file names correspond to datafields 
+            ! (as it would be in a restarted computation)
+            allocate( dummy_name( params%N_fields_saved ) )
+            dummy_name = '---'
+            call read_param_mpi(FILE, 'Saving', 'field_names', dummy_name, dummy_name)
+           
+            ! compute file names, /todo: time factor should synchronize with file saving or read from ini file
+            do i = 1, params%n_eqn
+                write( params%input_files(i) ,'(a, "_", i12.12, ".h5")') trim(adjustl(dummy_name(i))), nint(params%input_time * 1.0e9_rk)
+            end do
+
+        end if
+
+    end if
 
     !***************************************************************************
     ! read DISCRETIZATION parameters

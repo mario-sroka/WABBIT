@@ -37,6 +37,9 @@ subroutine read_parameter_wabbit_core( params_physics, filename )
     ! MPI error variable
     integer(kind=ik)                        :: ierr
 
+    ! loop variable
+    integer(kind=ik)                        :: i
+
 !---------------------------------------------------------------------------------------------
 ! variables initialization
 
@@ -144,9 +147,27 @@ subroutine read_parameter_wabbit_core( params_physics, filename )
     ! read variable names
     allocate( params_physics%input_files( params_physics%NdF ) )
 
-    params_physics%input_files = "---"
-    if ( params_physics%read_from_files ) then
+    ! alternatively to explicitly file names, you can start from a given input time
+    ! if a input time >= 0 is read, then the file names are computed, not read
+    ! so: if you want to use file names, set time to any value lower than 0    
+    ! --------------------------------------------------------------------------------
+    call read_param_mpi(FILE, 'Physics', 'input_time', params_physics%input_time, -1.0_rk )
+
+    if ( params_physics%input_time < 0.0_rk ) then
+        ! read file names
+        params_physics%input_files = "---"
         call read_param_mpi(FILE, 'Physics', 'input_files', params_physics%input_files, params_physics%input_files)
+        
+    else
+
+        ! use saving file names, assume first file names correspond to datafields 
+        ! (as it would be in a restarted computation)
+        
+        ! compute file names, /todo: time factor should synchronize with file saving or read from ini file
+        do i = 1, params_physics%NdF
+            write( params_physics%input_files(i) ,'(a, "_", i12.12, ".h5")') trim(adjustl(params_physics%names_saved(i))), nint(params_physics%input_time * 1.0e9_rk)
+        end do
+
     end if
 
     ! time stepping

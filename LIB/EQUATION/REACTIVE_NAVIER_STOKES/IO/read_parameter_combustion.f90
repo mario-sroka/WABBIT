@@ -36,11 +36,8 @@ subroutine read_parameter_combustion( params_physics, filename, gas )
     ! inifile structure
     type(inifile)                           :: FILE
 
-    ! MPI error variable
-!    integer(kind=ik)                        :: ierr
-
     ! dummy variable
-!    integer(kind=ik)                        :: dummy, k
+    integer(kind=ik)                        :: dummy, k
 
 !---------------------------------------------------------------------------------------------
 ! variables initialization
@@ -62,8 +59,6 @@ subroutine read_parameter_combustion( params_physics, filename, gas )
     params_physics%inicond_position = params_physics%inicond_position * params_physics%L
 
     ! constant inicond values
-!    call read_param_mpi(FILE, 'Combustion', 'inicond_rho', params_physics%inicond_rho, 0.0_rk )
-!    call read_param_mpi(FILE, 'Combustion', 'inicond_u', params_physics%inicond_u, (/ 0.0_rk, 0.0_rk, 0.0_rk /) )
     call read_param_mpi(FILE, 'Combustion', 'inicond_p', params_physics%inicond_p, 0.0_rk )
 
     ! read field indexes
@@ -78,47 +73,34 @@ subroutine read_parameter_combustion( params_physics, filename, gas )
     ! IO parameter
     call read_param_mpi(FILE, 'Combustion', 'save_primitive', params_physics%save_primitive, .false. )
 
-    ! read chemical parameter
-    ! file name
-!    call read_param_mpi(FILE, 'Combustion', 'chemistry_file', params_physics%chemistry_file, '---' )
-    ! read params
-!    if ( params_physics%chemistry_file == '---' ) then
-        ! no chemistry file name read
-!        call abort(181018001,"ERROR: can not initialize chemistry model, abort initialization.")
-!    else
-        ! read chemistry and fluid parameter
-!        call read_parameter_chemistry( params_physics, params_physics%chemistry_file, gas )
-!    end if
-
     ! forcing parameters
-!    call read_param_mpi(FILE, 'Combustion', 'forcing', params_physics%forcing, .false. )
-!    call read_param_mpi(FILE, 'Combustion', 'k0', params_physics%k0, 0.0_rk )
-!    call read_param_mpi(FILE, 'Combustion', 'kmax', params_physics%kmax, 1 )
-!    call read_param_mpi(FILE, 'Combustion', 'eps_s_target', params_physics%eps_s_target, 0.0_rk )
-!    call read_param_mpi(FILE, 'Combustion', 'target_force', params_physics%target_force, 0.0_rk )
+    call read_param_mpi(FILE, 'Combustion', 'forcing', params_physics%forcing, .false. )
+    call read_param_mpi(FILE, 'Combustion', 'k0', params_physics%k0, 0.0_rk )
+    call read_param_mpi(FILE, 'Combustion', 'kmax', params_physics%kmax, 1 )
+    call read_param_mpi(FILE, 'Combustion', 'eps_s_target', params_physics%eps_s_target, 0.0_rk )
+    call read_param_mpi(FILE, 'Combustion', 'target_force', params_physics%target_force, 0.0_rk )
 
     ! allocate fourier coeffcients array, only if forcing enabled
-!    if ( params_physics%forcing ) then
-!        allocate( params_physics%phi_hat( params_physics%kmax, params_physics%kmax, params_physics%kmax, 3 ) )
-!        allocate( params_physics%phi_hat_d( params_physics%kmax, params_physics%kmax, params_physics%kmax, 3 ) )
-!        allocate( params_physics%phi_hat_s( params_physics%kmax, params_physics%kmax, params_physics%kmax, 3 ) )
+    if ( params_physics%forcing ) then
+        allocate( params_physics%phi_hat( params_physics%kmax, params_physics%kmax, params_physics%kmax, 3 ) )
+        allocate( params_physics%phi_hat_d( params_physics%kmax, params_physics%kmax, params_physics%kmax, 3 ) )
+        allocate( params_physics%phi_hat_s( params_physics%kmax, params_physics%kmax, params_physics%kmax, 3 ) )
 
-!        params_physics%phi_hat_d = 0.0_rk
-!        params_physics%phi_hat_s = 0.0_rk
+        params_physics%phi_hat_d = 0.0_rk
+        params_physics%phi_hat_s = 0.0_rk
 
         ! complex roots of unity
-        ! \todo: lvl from ini file? real blocklvl?
-        ! Domainsize
-!        dummy = (params_physics%Bs-1) * 2**params_physics%maxLvl
+        ! max Domainsize
+        dummy = max( params_physics%Bs(1)-1, params_physics%Bs(2)-1, params_physics%Bs(3)-1 ) * 2**params_physics%maxLvl
         ! allocate
-!        allocate( params_physics%roots( dummy * params_physics%kmax  ) )
+        allocate( params_physics%roots( dummy * params_physics%kmax  ) )
         ! unity roots
- !       do k = 1, dummy * params_physics%kmax
-!            params_physics%roots(k) = exp( cmplx( 0.0_rk, 2.0_rk*pi/real(dummy,kind=rk), kind=rk) ) &
-!                                      **real(k-1, kind=rk)
-!        end do
+        do k = 1, dummy * params_physics%kmax
+            params_physics%roots(k) = exp( cmplx( 0.0_rk, 2.0_rk*pi/real(dummy,kind=rk), kind=rk) ) &
+                                      **real(k-1, kind=rk)
+        end do
 
-!    end if
+    end if
 
     ! clean up
     call clean_ini_file_mpi(FILE)

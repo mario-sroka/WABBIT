@@ -40,6 +40,8 @@ subroutine ini_reactive_ns( params_physics, phi, x0, dx, gas )
 
     ! field indexes
     integer(kind=ik)                        :: rhoF, UxF, UyF, UzF, EF, YF
+    ! loop variable
+    integer(kind=ik)                        :: k
 
 !---------------------------------------------------------------------------------------------
 ! variables initialization
@@ -57,6 +59,16 @@ subroutine ini_reactive_ns( params_physics, phi, x0, dx, gas )
 
     ! case specific ini conditions
     select case (params_physics%inicond_name)
+
+        case ("from_file")
+            !---------------------------------------------------------------------------------------------
+            ! compute skew symmetric variables if data from file were saved in primitive form
+            ! note: if save_primitive is set, then we assume the data is stored in primitive from
+            ! note: data is actually read in wabbit core, so if you wish to use this ini condition, 
+            ! ensure read_from_files option is set accordingly
+            if (params_physics%save_primitive) then                
+                call  convert_from_primitive( params_physics, phi, phi )
+            end if
 
         case ("cantera_spark")
             !---------------------------------------------------------------------------------------------

@@ -3,11 +3,11 @@
 ! ********************************************************************************************
 ! WABBIT
 ! ============================================================================================
-!> \name convert_to_primitive.f90
+!> \name convert_from_primitive.f90
 !> \version 0.5
 !> \author msr
 !
-!> \brief convert skew symmetric state vector to primitive state vector
+!> \brief convert to skew symmetric state vector from primitive state vector
 !>
 !! input:    - params_physics, state vector \n
 !! output:   - work array \n
@@ -15,11 +15,11 @@
 !!
 !! = log ======================================================================================
 !! \n
-!! 09/08/19 - create
+!! 12/08/19 - create
 !
 ! ********************************************************************************************
 
-subroutine convert_to_primitive( params_physics, phi, phi_work )
+subroutine convert_from_primitive( params_physics, phi, phi_work )
 
 !---------------------------------------------------------------------------------------------
 ! variables
@@ -52,24 +52,29 @@ subroutine convert_to_primitive( params_physics, phi, phi_work )
 !---------------------------------------------------------------------------------------------
 ! main body
 
-    ! rho
+    ! species
     !-----------------------------------------------------------------------------------------
-    phi_work(:, :, :, rhoF) = phi(:,:,:,rhoF)**2.0_rk
+    ! check chemistry model: 
+    select case(params_physics%chemistry_model)
 
-    ! Ux
-    !-----------------------------------------------------------------------------------------
-    phi_work(:, :, :, UxF)  = phi(:,:,:,UxF) / phi(:,:,:,rhoF)
+        case('inert')
+            ! nothing to do
 
-    ! Uy
-    !-----------------------------------------------------------------------------------------
-    phi_work(:, :, :, UyF)  = phi(:,:,:,UyF) / phi(:,:,:,rhoF) 
+        case('one_step')
+            phi_work(:, :, :, YF) = phi(:,:,:,YF) * phi_work(:, :, :, rhoF)
 
-    ! Uz
-    !-----------------------------------------------------------------------------------------
-    ! 3D?
-    if ( params_physics%d == 3 ) then
-        phi_work(:, :, :, UzF) = phi(:,:,:,UzF) / phi(:,:,:,rhoF)
-    end if
+        case('cantera')
+            ! compute inert specie (assume specie is stored in last datafield), to ensure mass conservation
+            phi_work(:, :, :, YF+params_physics%species-1) = 1.0_rk
+            do k = 1, params_physics%species-1
+                 phi_work(:, :, :, YF+k-1) = phi(:,:,:,YF+k-1) * phi_work(:, :, :, rhoF)
+                 phi_work(:, :, :, YF+params_physics%species-1) = phi_work(:, :, :, YF+params_physics%species-1) - phi_work(:, :, :, YF+k-1)
+            end do
+
+        case default
+            call abort(120819002,"ERROR: can not convert to primitive variables, no chemistry model specified")
+
+    end select
 
     ! energy field
     !-----------------------------------------------------------------------------------------
@@ -82,35 +87,30 @@ subroutine convert_to_primitive( params_physics, phi, phi_work )
             phi_work(:, :, :, EF)   = phi(:,:,:,EF)
 
         case('cantera')
-            phi_work(:, :, :, EF)   = phi(:,:,:,EF) / phi_work(:, :, :, rhoF)
+            phi_work(:, :, :, EF)   = phi(:,:,:,EF) * phi_work(:, :, :, rhoF)
 
         case default
-            call abort(090819001,"ERROR: can not convert to primitive variables, no chemistry model specified")
+            call abort(120819003,"ERROR: can not convert to primitive variables, no chemistry model specified")
 
     end select
 
-    ! species
+    ! rho
     !-----------------------------------------------------------------------------------------
-    ! check chemistry model: 
-    select case(params_physics%chemistry_model)
+    phi_work(:, :, :, rhoF) = dsqrt(phi(:,:,:,rhoF))
 
-        case('inert')
-            ! nothing to do
+    ! Ux
+    !-----------------------------------------------------------------------------------------
+    phi_work(:, :, :, UxF)  = phi(:,:,:,UxF) * phi_work(:, :, :, rhoF)
 
-        case('one_step')
-            phi_work(:, :, :, YF) = phi(:,:,:,YF) / phi_work(:, :, :, rhoF)
+    ! Uy
+    !-----------------------------------------------------------------------------------------
+    phi_work(:, :, :, UyF)  = phi(:,:,:,UyF) * phi_work(:, :, :, rhoF) 
 
-        case('cantera')
-            ! compute inert specie (assume specie is stored in last datafield), to ensure mass conservation
-            phi_work(:, :, :, YF+params_physics%species-1) = 1.0_rk
-            do k = 1, params_physics%species-1
-                 phi_work(:, :, :, YF+k-1) = phi(:,:,:,YF+k-1) / phi_work(:, :, :, rhoF)
-                 phi_work(:, :, :, YF+params_physics%species-1) = phi_work(:, :, :, YF+params_physics%species-1) - phi_work(:, :, :, YF+k-1)
-            end do
+    ! Uz
+    !-----------------------------------------------------------------------------------------
+    ! 3D?
+    if ( params_physics%d == 3 ) then
+        phi_work(:, :, :, UzF) = phi(:,:,:,UzF) * phi_work(:, :, :, rhoF)
+    end if
 
-        case default
-            call abort(090819001,"ERROR: can not convert to primitive variables, no chemistry model specified")
-
-    end select
-
-end subroutine convert_to_primitive
+end subroutine convert_from_primitive

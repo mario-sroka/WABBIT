@@ -291,7 +291,7 @@ contains
     ! NOTE: as for the RHS, some terms here depend on the grid as whole, and not just
     ! on individual blocks. This requires one to use the same staging concept as for the RHS.
     !-----------------------------------------------------------------------------
-    subroutine STATISTICS_meta( physics, time, dt, u, g, x0, dx, rhs, stage, mask )
+    subroutine STATISTICS_meta( physics, time, dt, u, g, x0, dx, rhs, stage, mask, lgt_n )
         implicit none
 
         character(len=*), intent(in) :: physics
@@ -326,6 +326,9 @@ contains
         ! stages are called only once, not for every block.
         character(len=*), intent(in) :: stage
 
+        !> number of active blocks (light data)
+        integer(kind=ik), intent(inout)     :: lgt_n
+
         select case(physics)
         case ("ACM-new")
             call STATISTICS_ACM( time, dt, u, g, x0, dx, stage, rhs, mask )
@@ -339,7 +342,7 @@ contains
 
         case ('reactive_navier_stokes')
             call interface_reactive_navier_stokes("statistics", time=time, phi=u, phi_work=rhs, &
-                 x0=x0, dx=dx, stage=stage)
+                 x0=x0, dx=dx, stage=stage, lgt_n=lgt_n)
 
         case default
             call abort(2152000, "[RHS_wrapper.f90]: physics_type is unknown"//physics)

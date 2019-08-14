@@ -243,7 +243,9 @@ $(OBJDIR)/module_reactive_navier_stokes.o: module_reactive_navier_stokes.f90 \
         IO/prepare_saved_data_reactive_ns.f90 IO/convert_to_primitive.f90 INI/inicond_zero_velocity.f90 INI/inicond_spark.f90 \
         INI/inicond_blob.f90 IO/compute_temperature.f90 IO/compute_reaction_rate.f90 FILTER/filter_reactive_ns.f90 \
         FILTER/explicit_filter.f90 FILTER/filter_1D.f90 RHS/RHS_wrapper_reactive_ns.f90 RHS/RHS_3D_CANTERA_navier_stokes_reactive_periodicBC.f90 \
-        RHS/diff_wrapper_3D.f90
+        RHS/diff_wrapper_3D.f90 TIME/get_dt_reactive_ns.f90 IO/convert_from_primitive.f90 RHS/RHS_3D_navier_stokes_non_reactive_periodicBC.f90 \
+        STATISTICS/statistics_reactive_ns.f90 STATISTICS/compute_dilatational_dissipation.f90 STATISTICS/compute_solenoidal_dissipation.f90 \
+        STATISTICS/compute_DFT.f90 STATISTICS/compute_IDFT.f90
 	$(FC) $(FFLAGS) -c -o $@ $< $(LDFLAGS)
 
 $(OBJDIR)/module_timing.o: module_timing.f90

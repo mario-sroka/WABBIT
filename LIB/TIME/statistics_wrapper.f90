@@ -78,7 +78,7 @@ subroutine statistics_wrapper(time, dt, params, hvy_block, hvy_tmp, hvy_mask, lg
     !-------------------------------------------------------------------------
     ! performs initializations in the RHS module, such as resetting integrals
     call STATISTICS_meta(params%physics_type, time, dt, hvy_block(:,:,:,:, hvy_active(1,tree_ID_flow)), g, x0, dx,&
-        hvy_tmp(:,:,:,:,hvy_active(1,tree_ID_flow)), "init_stage", hvy_mask(:,:,:,:, hvy_active(1,tree_ID_flow)))
+        hvy_tmp(:,:,:,:,hvy_active(1,tree_ID_flow)), "init_stage", hvy_mask(:,:,:,:, hvy_active(1,tree_ID_flow)), lgt_n(tree_ID_flow))
 
     !-------------------------------------------------------------------------
     ! 2nd stage: integral_stage. (called for all blocks)
@@ -95,7 +95,7 @@ subroutine statistics_wrapper(time, dt, params, hvy_block, hvy_tmp, hvy_mask, lg
       call get_block_spacing_origin( params, lgt_id, lgt_block, x0, dx )
 
       call STATISTICS_meta(params%physics_type, time, dt, hvy_block(:,:,:,:, hvy_active(k,tree_ID_flow)), g, x0, dx,&
-          hvy_tmp(:,:,:,:,hvy_active(k,tree_ID_flow)), "integral_stage", hvy_mask(:,:,:,:, hvy_active(k,tree_ID_flow)))
+          hvy_tmp(:,:,:,:,hvy_active(k,tree_ID_flow)), "integral_stage", hvy_mask(:,:,:,:, hvy_active(k,tree_ID_flow)), lgt_n(tree_ID_flow))
     enddo
 
 
@@ -104,7 +104,7 @@ subroutine statistics_wrapper(time, dt, params, hvy_block, hvy_tmp, hvy_mask, lg
     !-------------------------------------------------------------------------
     ! in rhs module, used for example for MPI_REDUCES
     call STATISTICS_meta(params%physics_type, time, dt, hvy_block(:,:,:,:, hvy_active(1,tree_ID_flow)), g, x0, dx,&
-        hvy_tmp(:,:,:,:,hvy_active(1,tree_ID_flow)), "post_stage", hvy_mask(:,:,:,:, hvy_active(1,tree_ID_flow)))
+        hvy_tmp(:,:,:,:,hvy_active(1,tree_ID_flow)), "post_stage", hvy_mask(:,:,:,:, hvy_active(1,tree_ID_flow)), lgt_n(tree_ID_flow) )
 
 
 end subroutine statistics_wrapper

@@ -63,6 +63,7 @@ module module_reactive_navier_stokes
     include "IO/read_parameter_chemistry.f90"
     include "IO/prepare_saved_data_reactive_ns.f90"
     include "IO/convert_to_primitive.f90"
+    include "IO/convert_from_primitive.f90"
     include "IO/compute_temperature.f90"
     include "IO/compute_reaction_rate.f90"
     !--------------------------------------------------
@@ -85,17 +86,26 @@ module module_reactive_navier_stokes
     include "RHS/RHS_3D_CANTERA_navier_stokes_reactive_periodicBC.f90"
     include "RHS/RHS_diff_subroutines.f90"
     include "RHS/diff_wrapper_3D.f90"
+    include "RHS/RHS_3D_navier_stokes_non_reactive_periodicBC.f90"
     !--------------------------------------------------
 
-!    include "STATISTICS/statistics_reactive_ns.f90"
+    !----- TIME ---------------------------------------
+    include "TIME/get_dt_reactive_ns.f90"
+    !--------------------------------------------------
 
-!    include "TIME/get_dt_reactive_ns.f90"
+    !----- STATISTICS ---------------------------------
+    include "STATISTICS/statistics_reactive_ns.f90"
+    include "STATISTICS/compute_dilatational_dissipation.f90"
+    include "STATISTICS/compute_solenoidal_dissipation.f90"
+    include "STATISTICS/compute_DFT.f90"
+    include "STATISTICS/compute_IDFT.f90"
+    !--------------------------------------------------
 
     ! ********************************************************************************************
     ! interface
     ! note: parameter struct is definded and saved here, and all subroutine calls start here
     ! ********************************************************************************************
-    subroutine interface_reactive_navier_stokes( interface_switch, filename, phi, phi_work, x0, dx, dF, dFname, rhs, stage, time, dt, filter_type )
+    subroutine interface_reactive_navier_stokes( interface_switch, filename, phi, phi_work, x0, dx, dF, dFname, rhs, stage, time, dt, filter_type, lgt_n )
 
     !---------------------------------------------------------------------------------------------
     ! variables
@@ -131,6 +141,8 @@ module module_reactive_navier_stokes
     real(kind=rk), intent (inout), optional         :: dt
     ! filter type
     character(len=*), intent(inout), optional       :: filter_type
+    !> number of active blocks (light data)
+    integer(kind=ik), intent(inout), optional       :: lgt_n
 
     ! physics datatype:
     ! note: use save to keep values in memory, when leave this subroutine to wabbit
@@ -140,7 +152,7 @@ module module_reactive_navier_stokes
     ! Cantera gas datatype:
     ! note: use save to keep values in memory, when leave this subroutine to wabbit
     ! -----------------------------------------------------------------------------
-    type(phase_t), save :: gas
+    type(phase_t), save                             :: gas
 
     !---------------------------------------------------------------------------------------------
     ! main body
@@ -189,13 +201,13 @@ module module_reactive_navier_stokes
             ! statistics
             ! ---------------------------------------
             case('statistics')
-                !call statistics_reactive_ns( params_physics, time, phi, phi_work, x0, dx, stage )
+                call statistics_reactive_ns( params_physics, time, phi, phi_work, x0, dx, stage, lgt_n, gas )
 
             ! ---------------------------------------
             ! time step
             ! ---------------------------------------
             case('get_dt')
-                !call get_dt_reactive_ns( params_physics, time, phi, x0, dx, dt )
+                call get_dt_reactive_ns( params_physics, time, phi, x0, dx, dt )
 
             ! ---------------------------------------
             ! error case

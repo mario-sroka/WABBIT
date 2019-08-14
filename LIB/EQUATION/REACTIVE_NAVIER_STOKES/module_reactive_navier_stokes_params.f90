@@ -68,6 +68,7 @@ module module_reactive_navier_stokes_params
         logical             :: read_from_files           ! start from input files
         character(len=80), &
         allocatable         :: input_files(:)            ! files we want to read for inital cond.
+        real(kind=rk)       :: input_time       = -1.0_rk! time we want to read for inital cond. 		
 
         ! time stepping
         real(kind=rk)       :: CFL                       ! CFL number
@@ -132,22 +133,26 @@ module module_reactive_navier_stokes_params
         real(kind=rk)       :: gas_constant     = 0.0_rk ! gas constant
 
         ! statistics parameter
-        real(kind=rk)       :: e_tot            = 0.0_rk ! total energy
+        real(kind=rk)       :: e_tot_mean       = 0.0_rk ! total energy mean
         real(kind=rk)       :: k_mean           = 0.0_rk ! turbulent kinetic energy
-        real(kind=rk)       :: k_d              = 0.0_rk ! solenoidal, dilatational component
-        real(kind=rk)       :: k_s              = 0.0_rk
+        real(kind=rk)       :: k_d_mean         = 0.0_rk ! solenoidal, dilatational component
+        real(kind=rk)       :: k_s_mean         = 0.0_rk
         real(kind=rk)       :: epsilon_mean     = 0.0_rk ! turbulent dissipation
-        real(kind=rk)       :: epsilon_d        = 0.0_rk ! solenoidal, dilatational component
-        real(kind=rk)       :: epsilon_s        = 0.0_rk
+        real(kind=rk)       :: epsilon_d_mean   = 0.0_rk ! solenoidal, dilatational component
+        real(kind=rk)       :: epsilon_s_mean   = 0.0_rk
         real(kind=rk)       :: UU_mean          = 0.0_rk ! U square mean
-        real(kind=rk)       :: omega_mean       = 0.0_rk ! reaction rate mean
-        real(kind=rk)       :: rho_mean         = 0.0_rk ! density mean
-        real(kind=rk)       :: e_kin_mean       = 0.0_rk ! kinetic energy injection mean
-        real(kind=rk)       :: e_sen_mean       = 0.0_rk ! sensible energy injection mean
+        real(kind=rk)       :: e_kin_mean       = 0.0_rk ! kinetic energy mean
+        real(kind=rk)       :: e_int_mean       = 0.0_rk ! internal energy mean
 
-        real(kind=rk)       :: u_mean          = 0.0_rk
-        real(kind=rk)       :: v_mean          = 0.0_rk
-        real(kind=rk)       :: w_mean          = 0.0_rk
+        real(kind=rk)       :: rho_mean         = 0.0_rk ! density mean
+        real(kind=rk)       :: u_mean           = 0.0_rk ! velocity mean
+        real(kind=rk)       :: v_mean           = 0.0_rk
+        real(kind=rk)       :: w_mean           = 0.0_rk
+        real(kind=rk)       :: u_mean_0         = 0.0_rk ! save mean values from last time step
+        real(kind=rk)       :: v_mean_0         = 0.0_rk
+        real(kind=rk)       :: w_mean_0         = 0.0_rk
+
+        real(kind=rk)       :: mu_mean          = 0.0_rk ! viscosity mean value
 
         ! forcing parameter
         logical             :: forcing          = .false.! enable/disable forcing

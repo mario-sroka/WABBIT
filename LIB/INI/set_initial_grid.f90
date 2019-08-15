@@ -152,6 +152,16 @@ subroutine set_initial_grid(params, lgt_block, hvy_block, hvy_neighbor, lgt_acti
         if (params%physics_type == 'navier_stokes') then
             call set_inicond_blocks(params, lgt_block, hvy_block, hvy_active, hvy_n)
         end if
+
+        ! reactive navier stokes: read from file and set a ini condition
+        if (params%physics_type == 'reactive_navier_stokes') then
+            !---------------------------------------------------------------------------
+            ! on the grid, evaluate the initial condition
+            !---------------------------------------------------------------------------
+            call set_inicond_blocks(params, lgt_block, hvy_block, hvy_active, hvy_n)
+
+        end if
+
     else
         if (params%rank==0) write(*,*) "Initial condition is defined by physics modules!"
         !---------------------------------------------------------------------------

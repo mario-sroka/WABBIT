@@ -60,6 +60,7 @@ subroutine read_parameter_combustion( params_physics, filename, gas )
 
     ! constant inicond values
     call read_param_mpi(FILE, 'Combustion', 'inicond_p', params_physics%inicond_p, 0.0_rk )
+    call read_param_mpi(FILE, 'Combustion', 'inicond_rho', params_physics%inicond_rho, 0.0_rk )
 
     ! read field indexes
     ! note: the given names are used for initializing and rhs computation,

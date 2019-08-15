@@ -83,6 +83,11 @@ subroutine ini_reactive_ns( params_physics, phi, x0, dx, gas )
             ! insert spark into domain           
             call inicond_spark( params_physics, phi, x0, dx, gas )
 
+        case ("taylor_green")
+            !---------------------------------------------------------------------------------------------
+            ! set velocity to taylor green vortices, density and pressure to inicond values
+            call inicond_taylor_green( params_physics, phi, x0, dx )
+
         case default
             call abort(091018002,"ERROR: unknown ini condition for reactive navier stokes.")
 

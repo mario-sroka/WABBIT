@@ -132,7 +132,9 @@ subroutine statistics_reactive_ns( params_physics, time, phi, phi_work, x0, dx, 
         params_physics%mu_mean          = 0.0_rk
 
         ! fourier coefficients
-        params_physics%phi_hat          = 0.0_rk
+        if (params_physics%forcing) then
+            params_physics%phi_hat          = 0.0_rk
+        end if
 
     case ("integral_stage")
         !-------------------------------------------------------------------------

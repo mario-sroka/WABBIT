@@ -73,6 +73,7 @@ module module_reactive_navier_stokes
     include "INI/inicond_zero_velocity.f90"
     include "INI/inicond_spark.f90"
     include "INI/inicond_blob.f90"
+    include "INI/inicond_taylor_green.f90"
     !--------------------------------------------------
 
     !----- FILTER -------------------------------------

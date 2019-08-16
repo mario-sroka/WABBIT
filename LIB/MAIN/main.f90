@@ -231,8 +231,13 @@ program main
         ! we need to sync ghost nodes for some derived qtys, for sure
         call sync_ghosts( params, lgt_block, hvy_block, hvy_neighbor, hvy_active(:,tree_ID_flow), hvy_n(tree_ID_flow))
 
+        ! compute statistics from initial condition to have meaningful starting conditions (e.g. forcing)
         call statistics_wrapper(time, dt, params, hvy_block, hvy_tmp, hvy_mask, lgt_block, &
         lgt_active, lgt_n, lgt_sortednumlist, hvy_active, hvy_n, hvy_neighbor)
+
+        ! save initial conditions
+        call save_data( iteration, time, params, lgt_block, hvy_block, lgt_active, &
+        lgt_n, lgt_sortednumlist, hvy_n, hvy_tmp, hvy_active, hvy_mask, hvy_neighbor )
 
     end if
      

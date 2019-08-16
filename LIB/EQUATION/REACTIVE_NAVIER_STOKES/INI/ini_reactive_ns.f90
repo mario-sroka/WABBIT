@@ -88,6 +88,30 @@ subroutine ini_reactive_ns( params_physics, phi, x0, dx, gas )
             ! set velocity to taylor green vortices, density and pressure to inicond values
             call inicond_taylor_green( params_physics, phi, x0, dx )
 
+        case ("pressure_blob")
+            !---------------------------------------------------------------------------------------------
+            ! check chemistry
+            ! cantera physics need special initialization, because p is not element of the state vector
+            if (params_physics%chemistry_model == 'cantera') then
+                call abort(090819002,"ERROR: pressure blob is not implemented for cantera chemistry model.")
+            end if
+
+            ! set velocity to zero
+            call inicond_zero_velocity( params_physics, phi )
+
+            ! set density to initial density
+            ! note: set up skew symmetric form here
+            phi(:, :, :, rhoF) = dsqrt(params_physics%inicond_rho)
+
+            ! set up density blob     
+            ! note: a few parameters are given explicitly to the subroutine in order to have a more generic 
+            ! call (at other positions in wabbit)      
+            call inicond_blob( params_physics, phi(:, :, :, EF) , x0, dx, params_physics%d, &
+                               params_physics%inicond_position(:), (/1.0_rk, params_physics%inicond_scales(2)/) )
+            ! magnitude of blob is between [0,1]
+            ! so: set up here pressure blob magnitude
+            phi(:, :, :, EF) = params_physics%inicond_p + phi(:, :, :, EF) * params_physics%inicond_scales(1)
+
         case default
             call abort(091018002,"ERROR: unknown ini condition for reactive navier stokes.")
 

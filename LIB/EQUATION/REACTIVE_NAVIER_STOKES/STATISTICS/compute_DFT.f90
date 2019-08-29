@@ -103,13 +103,13 @@ subroutine compute_DFT( params_physics, phi, phi_hat, x0, dx )
             do i = 1, kmax
 
                 dummy(l,i,k) = phi(l,1,k) &
-                             * params_physics%roots( (i-1)*(start_i(2)-1) + 1)
+                             * params_physics%rootsY( (i-1)*(start_i(2)-1) + 1)
 
                 do j = 2, Bs(2)-1
 
                     dummy(l,i,k) = dummy(l,i,k) &
                                  + phi(l,j,k) &
-                                 * params_physics%roots( (i-1)*(start_i(2)+j-2) + 1)
+                                 * params_physics%rootsY( (i-1)*(start_i(2)+j-2) + 1)
 
                 end do
             end do
@@ -122,13 +122,13 @@ subroutine compute_DFT( params_physics, phi, phi_hat, x0, dx )
             do i = 1, kmax
 
                 dummy2(l,k,i) = dummy(l,k,1) &
-                              * params_physics%roots( (i-1)*(start_i(3)-1) + 1)
+                              * params_physics%rootsZ( (i-1)*(start_i(3)-1) + 1)
 
                 do j = 2, Bs(3)-1
 
                     dummy2(l,k,i) = dummy2(l,k,i) &
                                   + dummy(l,k,j) &
-                                  * params_physics%roots( (i-1)*(start_i(3)+j-2) + 1)
+                                  * params_physics%rootsZ( (i-1)*(start_i(3)+j-2) + 1)
 
                 end do
             end do
@@ -140,13 +140,13 @@ subroutine compute_DFT( params_physics, phi, phi_hat, x0, dx )
             do i = 1, kmax
 
                 dummy(i,l,k) = dummy2(1,l,k) &
-                             * params_physics%roots( (i-1)*(start_i(1)-1) + 1)
+                             * params_physics%rootsX( (i-1)*(start_i(1)-1) + 1)
 
                 do j = 2, Bs(1)-1
 
                     dummy(i,l,k) = dummy(i,l,k) &
                                  + dummy2(j,l,k) &
-                                 * params_physics%roots( (i-1)*(start_i(1)+j-2) + 1)
+                                 * params_physics%rootsX( (i-1)*(start_i(1)+j-2) + 1)
 
                 end do
             end do

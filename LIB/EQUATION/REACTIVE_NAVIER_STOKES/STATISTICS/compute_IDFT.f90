@@ -106,7 +106,7 @@ subroutine compute_IDFT( params_physics, phi_hat, phi, x0, dx )
 
                     dummy2(i,l,k) = dummy2(i,l,k) &
                                   + phi_hat(j,l,k) &
-                                  * dconjg(params_physics%roots( (start_i(1)+i-2)*(j-1) + 1))
+                                  * dconjg(params_physics%rootsX( (start_i(1)+i-2)*(j-1) + 1))
 
                 end do
             end do
@@ -122,7 +122,7 @@ subroutine compute_IDFT( params_physics, phi_hat, phi, x0, dx )
 
                     dummy(l,k,i) = dummy(l,k,i) &
                                  + dummy2(l,k,j) &
-                                 * dconjg(params_physics%roots( (start_i(3)+i-2)*(j-1) + 1))
+                                 * dconjg(params_physics%rootsZ( (start_i(3)+i-2)*(j-1) + 1))
 
                 end do
             end do
@@ -138,7 +138,7 @@ subroutine compute_IDFT( params_physics, phi_hat, phi, x0, dx )
 
                     dummy2(l,i,k) = dummy2(l,i,k) &
                                   + dummy(l,j,k) &
-                                  * dconjg(params_physics%roots( (start_i(2)+i-2)*(j-1) + 1))
+                                  * dconjg(params_physics%rootsY( (start_i(2)+i-2)*(j-1) + 1))
 
                 end do
             end do

@@ -166,7 +166,8 @@ module module_reactive_navier_stokes_params
         complex(kind=rk)    ,&
         allocatable         :: phi_hat_s(:,:,:,:)        ! solenoidal fourier coeffcients
         complex(kind=rk)    ,&
-        allocatable         :: roots(:)                  ! complex roots
+        allocatable         :: rootsX(:), rootsY(:), &   ! complex roots, note: need 3 arrays, for
+                               rootsZ(:)                 ! cases with different domain sizes                                                         
 
         real(kind=rk)       :: target_force     = 0.0_rk ! target values
         real(kind=rk)       :: eps_s_target     = 0.0_rk !

@@ -37,7 +37,7 @@ subroutine read_parameter_combustion( params_physics, filename, gas )
     type(inifile)                           :: FILE
 
     ! dummy variable
-    integer(kind=ik)                        :: dummy, k
+    integer(kind=ik)                        :: dummy(3), k
 
 !---------------------------------------------------------------------------------------------
 ! variables initialization
@@ -91,14 +91,28 @@ subroutine read_parameter_combustion( params_physics, filename, gas )
         params_physics%phi_hat_s = 0.0_rk
 
         ! complex roots of unity
-        ! max Domainsize
-        dummy = max( params_physics%Bs(1)-1, params_physics%Bs(2)-1, params_physics%Bs(3)-1 ) * 2**params_physics%maxLvl
+        ! Domainsizes
+        dummy(1) = (params_physics%Bs(1)-1) * 2**params_physics%maxLvl
+        dummy(2) = (params_physics%Bs(2)-1) * 2**params_physics%maxLvl
+        dummy(3) = (params_physics%Bs(3)-1) * 2**params_physics%maxLvl
+
         ! allocate
-        allocate( params_physics%roots( dummy * params_physics%kmax  ) )
+        allocate( params_physics%rootsX( dummy(1) * params_physics%kmax  ) )
+        allocate( params_physics%rootsY( dummy(2) * params_physics%kmax  ) )
+        allocate( params_physics%rootsZ( dummy(3) * params_physics%kmax  ) )
+
         ! unity roots
-        do k = 1, dummy * params_physics%kmax
-            params_physics%roots(k) = exp( cmplx( 0.0_rk, 2.0_rk*pi/real(dummy,kind=rk), kind=rk) ) &
-                                      **real(k-1, kind=rk)
+        do k = 1, dummy(1) * params_physics%kmax
+            params_physics%rootsX(k) = exp( cmplx( 0.0_rk, 2.0_rk*pi/real(dummy(1), kind=rk), kind=rk) ) &
+                                     **real(k-1, kind=rk)
+        end do
+        do k = 1, dummy(2) * params_physics%kmax
+            params_physics%rootsY(k) = exp( cmplx( 0.0_rk, 2.0_rk*pi/real(dummy(2), kind=rk), kind=rk) ) &
+                                     **real(k-1, kind=rk)
+        end do
+        do k = 1, dummy(3) * params_physics%kmax
+            params_physics%rootsZ(k) = exp( cmplx( 0.0_rk, 2.0_rk*pi/real(dummy(3), kind=rk), kind=rk) ) &
+                                     **real(k-1, kind=rk)
         end do
 
     end if

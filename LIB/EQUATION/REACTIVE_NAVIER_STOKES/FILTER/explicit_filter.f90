@@ -102,8 +102,8 @@ subroutine explicit_filter( params_physics, phi, phi_work, x0, dx )
             end do
 
             ! write filtered values back to state vector
-            do j = g+1, Bs(1)+g
-                do i = g+1, Bs(2)+g
+            do j = g+1, Bs(2)+g
+                do i = g+1, Bs(1)+g
                     phi(i, j, 1, dF)   = phi_work(i, j, 1, dF)
                 end do
             end do

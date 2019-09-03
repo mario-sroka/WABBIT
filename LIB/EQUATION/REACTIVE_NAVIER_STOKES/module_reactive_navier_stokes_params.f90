@@ -181,6 +181,9 @@ module module_reactive_navier_stokes_params
         real(kind=rk)       ,&
         allocatable         :: Y_ref(:,:)
 
+        real(kind=rk)       :: sponge_width     = 0.0_rk ! sponge parameter
+        real(kind=rk)       :: sponge_strength  = 0.0_rk !
+
     end type type_params_rns
 
 !---------------------------------------------------------------------------------------------

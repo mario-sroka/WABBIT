@@ -9,7 +9,7 @@ module module_boundary_conditions
 
     use module_globals
     use module_params
-    use module_treelib,only: adjacent_block_2D
+    use module_treelib,only: adjacent_block_2D, decoding
     implicit none
 
     ! make all functions privat if not explicit marked as public
@@ -17,7 +17,7 @@ module module_boundary_conditions
 
     ! functions and routines acessible outside of this module
     !**********************************************************************************************
-    PUBLIC :: get_adjacent_boundary_surface_normal,block_is_adjacent_to_boundary
+    PUBLIC :: get_adjacent_boundary_surface_normal,block_is_adjacent_to_boundary, detect_non_periodic_neighbor_3D
     !**********************************************************************************************
 
     character(len=3), parameter, dimension(16)  :: DIR_2D  = (/ '__N', '__E', &
@@ -29,6 +29,10 @@ module module_boundary_conditions
 
 
 contains
+
+ ! 3D non periodic BSc
+ !-----------------------------------------------------------------------------
+ include "detect_non_periodic_neighbor_3D.f90"
 
  !-----------------------------------------------------------------------------
  !> \brief Computes the surface normal of the boundary, if the current block is adjacent to the boundary.\n

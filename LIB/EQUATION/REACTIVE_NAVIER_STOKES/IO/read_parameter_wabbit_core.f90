@@ -40,6 +40,9 @@ subroutine read_parameter_wabbit_core( params_physics, filename )
     ! loop variable
     integer(kind=ik)                        :: i
 
+    ! dummy variable
+    logical                                 :: dummy(3)
+
 !---------------------------------------------------------------------------------------------
 ! variables initialization
 

@@ -3,11 +3,11 @@
 ! ********************************************************************************************
 ! WABBIT
 ! ============================================================================================
-!> \name RHS_3D_CANTERA_navier_stokes_reactive_periodicBC.f90
+!> \name RHS_3D_CANTERA_navier_stokes_reactive_non_periodicBC.f90
 !> \version 0.5
 !> \author msr
 !
-!> \brief RHS for 3D navier stokes equation with cantera chemistry and periodic boundaries
+!> \brief RHS for 3D navier stokes equation with cantera chemistry and non-periodic boundaries
 !
 !>
 !! input:    - datafields, grid parameter, chemistry mixture variable \n
@@ -16,11 +16,11 @@
 !!
 !! = log ======================================================================================
 !! \n
-!! 14/02/19 - create
+!! 30/08/19 - create
 !
 ! ********************************************************************************************
 
-subroutine RHS_3D_CANTERA_navier_stokes_reactive_periodicBC(params_physics, Bs, g, NdF, x0, delta_x, phi, rhs, gas)
+subroutine RHS_3D_CANTERA_navier_stokes_reactive_non_periodicBC(params_physics, Bs, g, NdF, x0, delta_x, phi, rhs, gas)
 
 !---------------------------------------------------------------------------------------------
 ! modules
@@ -87,14 +87,18 @@ subroutine RHS_3D_CANTERA_navier_stokes_reactive_periodicBC(params_physics, Bs, 
     ! switch to enabled one sided derivatives
     logical                                                 :: onesided(2,3)
 
+    ! reference side for sponge computation
+    integer(kind=ik)                                        :: ref_side
+
 !---------------------------------------------------------------------------------------------
 ! interfaces
 
 !---------------------------------------------------------------------------------------------
 ! variables initialization
 
-    ! periodic boundary here, so:
-    onesided = .false.
+    ! set one sided boundary
+    ! note: boundaries are set blockwise, so we need to calculate this here for every RHS call!
+    call boundaries_xyz( onesided, x0, delta_x, params_physics%L, Bs, g, params_physics%periodic_BC )
 
     ! inverse parameters
     do n = 1, params_physics%species
@@ -153,7 +157,7 @@ subroutine RHS_3D_CANTERA_navier_stokes_reactive_periodicBC(params_physics, Bs, 
     !#########################################################################################
     ! CANTERA common code
     include "RHS/RHS_3D_CANTERA_common_code_equations.f90"
-    !#########################################################################################    
+    !#########################################################################################
 
     !#########################################################################################
     ! forcing
@@ -163,7 +167,107 @@ subroutine RHS_3D_CANTERA_navier_stokes_reactive_periodicBC(params_physics, Bs, 
     end if
 
     !#########################################################################################
-    ! penalization -> nothing to do here
+    ! penalization
     !#########################################################################################
+    ! set sponge field, use dummy array, note: /todo: store sponge field globally
+    call set_penalization( params_physics, Bs, g, x0, delta_x, dummy )
 
-end subroutine RHS_3D_CANTERA_navier_stokes_reactive_periodicBC
+    ! set sponge at non-periodic BCs
+    ! /todo: better coding
+    if ( .NOT.(params_physics%periodic_BC(1)) ) then
+        ! compute boundary side: x+ or x-, note: split domain at domain center
+        if ( x0(1) < (params_physics%L(1)/2.0_rk + 1e-12_rk) ) then
+            ref_side = 1
+        else
+            ref_side = 2
+        end if
+
+        do k = g+1, Bs(3)+g
+            do j = g+1, Bs(2)+g
+                do i = g+1, Bs(1)+g
+
+                    rhs(i,j,k,rhoF) = rhs(i,j,k,rhoF) - ( rho(i,j,k) - params_physics%rho_ref(ref_side) ) * dummy(i, j, k)
+
+                    rhs(i,j,k,UxF)  = rhs(i,j,k,UxF)  - ( u(i,j,k)   - params_physics%u_ref(ref_side)   ) * dummy(i, j, k)
+
+                    rhs(i,j,k,UyF)  = rhs(i,j,k,UyF)  - ( v(i,j,k)   - params_physics%v_ref(ref_side)   ) * dummy(i, j, k)
+
+                    rhs(i,j,k,UzF)  = rhs(i,j,k,UzF)  - ( w(i,j,k)   - params_physics%w_ref(ref_side)   ) * dummy(i, j, k)
+
+                    rhs(i,j,k,EF)   = rhs(i,j,k,EF)   - ( es(i,j,k)  - params_physics%es_ref(ref_side)  ) * dummy(i, j, k)
+
+!                    do n=1, params_physics%species 
+!                        rhs(i,j,k,YF+n-1)   = rhs(i,j,k,YF+n-1)   - ( Y(i,j,k,n)  - params_physics%Y_ref(n,ref_side)  ) * dummy(i, j, k)
+!                    end do
+
+                end do
+            end do
+        end do
+
+    end if
+
+    if ( .NOT.(params_physics%periodic_BC(2)) ) then
+        ! compute boundary side: x+ or x-, note: split domain at domain center
+        if ( x0(2) < (params_physics%L(2)/2.0_rk + 1e-12_rk) ) then
+            ref_side = 3
+        else
+            ref_side = 4
+        end if
+
+        do k = g+1, Bs(3)+g
+            do j = g+1, Bs(2)+g
+                do i = g+1, Bs(1)+g
+
+                    rhs(i,j,k,rhoF) = rhs(i,j,k,rhoF) - ( rho(i,j,k) - params_physics%rho_ref(ref_side) ) * dummy(i, j, k)
+
+                    rhs(i,j,k,UxF)  = rhs(i,j,k,UxF)  - ( u(i,j,k)   - params_physics%u_ref(ref_side)   ) * dummy(i, j, k)
+
+                    rhs(i,j,k,UyF)  = rhs(i,j,k,UyF)  - ( v(i,j,k)   - params_physics%v_ref(ref_side)   ) * dummy(i, j, k)
+
+                    rhs(i,j,k,UzF)  = rhs(i,j,k,UzF)  - ( w(i,j,k)   - params_physics%w_ref(ref_side)   ) * dummy(i, j, k)
+
+                    rhs(i,j,k,EF)   = rhs(i,j,k,EF)   - ( es(i,j,k)  - params_physics%es_ref(ref_side)  ) * dummy(i, j, k)
+
+!                    do n=1, params_physics%species 
+!                        rhs(i,j,k,YF+n-1)   = rhs(i,j,k,YF+n-1)   - ( Y(i,j,k,n)  - params_physics%Y_ref(n,ref_side)  ) * dummy(i, j, k)
+!                    end do
+
+                end do
+            end do
+        end do
+
+    end if
+
+    if ( .NOT.(params_physics%periodic_BC(3)) ) then
+        ! compute boundary side: x+ or x-, note: split domain at domain center
+        if ( x0(3) < (params_physics%L(3)/2.0_rk + 1e-12_rk) ) then
+            ref_side = 5
+        else
+            ref_side = 6
+        end if
+
+        do k = g+1, Bs(3)+g
+            do j = g+1, Bs(2)+g
+                do i = g+1, Bs(1)+g
+
+                    rhs(i,j,k,rhoF) = rhs(i,j,k,rhoF) - ( rho(i,j,k) - params_physics%rho_ref(ref_side) ) * dummy(i, j, k)
+
+                    rhs(i,j,k,UxF)  = rhs(i,j,k,UxF)  - ( u(i,j,k)   - params_physics%u_ref(ref_side)   ) * dummy(i, j, k)
+
+                    rhs(i,j,k,UyF)  = rhs(i,j,k,UyF)  - ( v(i,j,k)   - params_physics%v_ref(ref_side)   ) * dummy(i, j, k)
+
+                    rhs(i,j,k,UzF)  = rhs(i,j,k,UzF)  - ( w(i,j,k)   - params_physics%w_ref(ref_side)   ) * dummy(i, j, k)
+
+                    rhs(i,j,k,EF)   = rhs(i,j,k,EF)   - ( es(i,j,k)  - params_physics%es_ref(ref_side)  ) * dummy(i, j, k)
+
+!                    do n=1, params_physics%species 
+!                        rhs(i,j,k,YF+n-1)   = rhs(i,j,k,YF+n-1)   - ( Y(i,j,k,n)  - params_physics%Y_ref(n,ref_side)  ) * dummy(i, j, k)
+!                    end do
+
+                end do
+            end do
+        end do
+
+    end if
+
+end subroutine RHS_3D_CANTERA_navier_stokes_reactive_non_periodicBC

@@ -103,6 +103,7 @@ module module_MPI
 
     PUBLIC :: sync_ghosts, blocks_per_mpirank, synchronize_lgt_data, reset_ghost_nodes
     PUBLIC :: synchronize_ghosts_generic_sequence, init_ghost_nodes, check_unique_origin
+    PUBLIC :: set_recv_bounds
 
 !---------------------------------------------------------------------------------------------
 ! main body

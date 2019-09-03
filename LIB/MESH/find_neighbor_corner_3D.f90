@@ -101,6 +101,12 @@ subroutine find_neighbor_corner_3D(params, heavy_id, light_id, lgt_block, max_tr
     ! neighbor light data id
     integer(kind=ik)                    :: neighbor_light_id, tree_id
 
+    ! variable for non-peridoic neighbor block detection
+    logical                             :: non_periodic
+
+    ! data_bounds array
+    integer(kind=ik)                    :: data_bounds(2,3)
+
 !---------------------------------------------------------------------------------------------
 ! interfaces
 
@@ -222,6 +228,22 @@ subroutine find_neighbor_corner_3D(params, heavy_id, light_id, lgt_block, max_tr
     call does_block_exist(neighbor, exists, neighbor_light_id, &
                                 lgt_sortednumlist, lgt_n, tree_id)
 
+    !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    ! non periodic boundary
+    !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    ! compute receiver bounds, need for lvl 1 meshes in detect non periodic neighbor subrioutine
+    ! note: use level difference of zero and neighborhood ids at same level, include_redundant id = 2
+    call set_recv_bounds( params, data_bounds, list_id, 0, 2, 'receiver')
+
+    ! detect, if a neighbor is over a non-periodic domain boundary
+    call detect_non_periodic_neighbor_3D( my_treecode, neighbor, params%periodic_BC, level, &
+                                          params%domain_size, params%Bs, data_bounds, non_periodic )
+
+    ! reset neighbor_light_id for non-periodic cases
+    if (non_periodic) neighbor_light_id = -1
+
+    !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     if (exists) then
         ! neighbor on same level

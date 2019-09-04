@@ -58,7 +58,11 @@ subroutine read_parameter_wabbit_core( params_physics, filename )
     call read_param_mpi(FILE, 'Domain', 'dim', params_physics%d, 2 )
 
     ! read number_block_nodes
-    call read_param_mpi(FILE, 'Blocks', 'number_block_nodes', params_physics%Bs, (/0, 0, 0/) )
+    if ( params_physics%d == 2 ) then
+        call read_param_mpi(FILE, 'Blocks', 'number_block_nodes', params_physics%Bs(1:2), (/0, 0/) )
+    else
+        call read_param_mpi(FILE, 'Blocks', 'number_block_nodes', params_physics%Bs(1:3), (/0, 0, 0/) )
+    end if
     ! read number_ghost_nodes
     call read_param_mpi(FILE, 'Blocks', 'number_ghost_nodes', params_physics%g, 1 )
     ! boundaries

@@ -18,10 +18,10 @@
 
 subroutine  diffxy_c_opt( Bs, g, dx, dy, u, dudx, dudy)
 
-    integer(kind=ik), intent(in)    :: g, Bs
+    integer(kind=ik), intent(in)    :: g, Bs(3)
     real(kind=rk), intent(in)       :: dx, dy
-    real(kind=rk), intent(in)       :: u(Bs+2*g, Bs+2*g)
-    real(kind=rk), intent(out)      :: dudx(Bs+2*g, Bs+2*g), dudy(Bs+2*g, Bs+2*g)
+    real(kind=rk), intent(in)       :: u(Bs(1)+2*g, Bs(2)+2*g)
+    real(kind=rk), intent(out)      :: dudx(Bs(1)+2*g, Bs(2)+2*g), dudy(Bs(1)+2*g, Bs(2)+2*g)
 
     integer                         :: i, j
     real(kind=rk)                   :: dx_inv, dy_inv
@@ -35,8 +35,8 @@ subroutine  diffxy_c_opt( Bs, g, dx, dy, u, dudx, dudy)
     dx_inv = 1.0_rk/(12.0_rk*dx)
     dy_inv = 1.0_rk/(12.0_rk*dy)
 
-    do j = g-1, Bs+g+2
-        do i = g-1, Bs+g+2
+    do j = g-1, Bs(2)+g+2
+        do i = g-1, Bs(1)+g+2
             dudx(i,j) = ( u(i-2,j) - 8.0_rk*u(i-1,j) + 8.0_rk*u(i+1,j) - u(i+2,j) ) * dx_inv
             dudy(i,j) = ( u(i,j-2) - 8.0_rk*u(i,j-1) + 8.0_rk*u(i,j+1) - u(i,j+2) ) * dy_inv
         end do
@@ -46,10 +46,10 @@ end subroutine diffxy_c_opt
 
 subroutine  diffx_c_opt( Bs, g, dx, u, dudx)
 
-    integer(kind=ik), intent(in)    :: g, Bs
+    integer(kind=ik), intent(in)    :: g, Bs(3)
     real(kind=rk), intent(in)       :: dx
-    real(kind=rk), intent(in)       :: u(Bs+2*g, Bs+2*g)
-    real(kind=rk), intent(out)      :: dudx(Bs+2*g, Bs+2*g)
+    real(kind=rk), intent(in)       :: u(Bs(1)+2*g, Bs(2)+2*g)
+    real(kind=rk), intent(out)      :: dudx(Bs(1)+2*g, Bs(2)+2*g)
 
     integer                         :: i, j
     real(kind=rk)                   :: dx_inv
@@ -62,8 +62,8 @@ subroutine  diffx_c_opt( Bs, g, dx, u, dudx)
 
     dx_inv = 1.0_rk/(12.0_rk*dx)
 
-    do j = g+1, Bs+g
-        do i = g+1, Bs+g
+    do j = g+1, Bs(2)+g
+        do i = g+1, Bs(1)+g
             dudx(i,j) = ( u(i-2,j) - 8.0_rk*u(i-1,j) + 8.0_rk*u(i+1,j) - u(i+2,j) ) * dx_inv
         end do
     end do
@@ -72,10 +72,10 @@ end subroutine diffx_c_opt
 
 subroutine  diffy_c_opt( Bs, g, dy, u, dudy)
 
-    integer(kind=ik), intent(in)    :: g, Bs
+    integer(kind=ik), intent(in)    :: g, Bs(3)
     real(kind=rk), intent(in)       :: dy
-    real(kind=rk), intent(in)       :: u(Bs+2*g, Bs+2*g)
-    real(kind=rk), intent(out)      :: dudy(Bs+2*g, Bs+2*g)
+    real(kind=rk), intent(in)       :: u(Bs(1)+2*g, Bs(2)+2*g)
+    real(kind=rk), intent(out)      :: dudy(Bs(1)+2*g, Bs(2)+2*g)
 
     integer                         :: i, j
     real(kind=rk)                   :: dy_inv
@@ -88,8 +88,8 @@ subroutine  diffy_c_opt( Bs, g, dy, u, dudy)
 
     dy_inv = 1.0_rk/(12.0_rk*dy)
 
-    do j = g+1, Bs+g
-        do i = g+1, Bs+g
+    do j = g+1, Bs(2)+g
+        do i = g+1, Bs(1)+g
             dudy(i,j) = ( u(i,j-2) - 8.0_rk*u(i,j-1) + 8.0_rk*u(i,j+1) - u(i,j+2) ) * dy_inv
         end do
     end do

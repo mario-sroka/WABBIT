@@ -95,7 +95,15 @@ subroutine RHS_wrapper_reactive_ns( params_physics, time, phi, phi_work, x0, dx,
 
                  !-------------------------------------------------------------------------
                  if (params_physics%d == 2) then
-                     ! /todo
+                     
+                     if (periodic) then
+                         ! periodic RHS
+                         call RHS_2D_CANTERA_navier_stokes_reactive_periodicBC( params_physics, params_physics%Bs, &
+                         params_physics%g, params_physics%NdF, x0, dx, phi(:,:,:,:), rhs(:,:,:,:), gas )
+                     else
+                         ! /todo
+                     end if
+
                  else
 
                      if (periodic) then

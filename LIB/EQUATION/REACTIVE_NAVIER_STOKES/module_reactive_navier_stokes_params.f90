@@ -79,7 +79,7 @@ module module_reactive_navier_stokes_params
         character(len=80)   :: reactive_ns_file = '---'  ! parameter file name
         ! inicondition
         character(len=80)   :: inicond_name     = '---'
-        real(kind=rk)       :: inicond_scales(2) &
+        real(kind=rk)       :: inicond_scales(5) &
                                                 = 0.0_rk ! scales for different ini conditions
         real(kind=rk)       :: inicond_position(3) &
                                                 = 0.0_rk ! position for different ini conditions

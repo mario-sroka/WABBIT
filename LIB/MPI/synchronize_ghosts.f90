@@ -19,7 +19,7 @@ subroutine sync_ghosts( params, lgt_block, hvy_block, hvy_neighbor, hvy_active, 
     ! loop variable
     integer(kind=ik)                    :: k, i
     ! dummy variables
-    integer(kind=ik)                    :: lgt_id, level, ix, iy, iz, Bs(3), g
+    integer(kind=ik)                    :: lgt_id, level, ix, iy, iz, Bs(3), g, d
     real(kind=rk)                       :: dx(3), x0(3)
 
     t0 = MPI_wtime()
@@ -27,6 +27,7 @@ subroutine sync_ghosts( params, lgt_block, hvy_block, hvy_neighbor, hvy_active, 
     ! readability
     Bs = params%Bs
     g  = params%n_ghosts
+    d  = params%dim
 
     call synchronize_ghosts_generic_sequence( params, lgt_block, hvy_block, hvy_neighbor, hvy_active, hvy_n )
 
@@ -47,10 +48,10 @@ subroutine sync_ghosts( params, lgt_block, hvy_block, hvy_neighbor, hvy_active, 
         call hvy_id_to_lgt_id( lgt_id, hvy_active(k), params%rank, params%number_blocks )
 
         ! (II): mesh level
-        level = lgt_block( lgt_id, params%max_treelevel + IDX_MESH_LVL )
+        level   = lgt_block( lgt_id, params%max_treelevel + IDX_MESH_LVL )
 
         ! (III): spacing
-        dx = 2.0_rk**(-level) * params%domain_size / real(Bs-1, kind=rk)
+        dx(1:d) = 2.0_rk**(-level) * params%domain_size(1:d) / real(Bs(1:d)-1, kind=rk)
 
         ! (IV): origin
         call decoding( lgt_block( lgt_id, 1:level), ix, iy, iz, level)

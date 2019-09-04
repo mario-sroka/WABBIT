@@ -75,13 +75,17 @@ subroutine inicond_spark( params_physics, phi, x0, dx, gas )
     YF   = params_physics%YF
 
     ! dummy fields
-    allocate( blob_field(1:Bs(1)+2*g, 1:Bs(2)+2*g, 1:Bs(3)+2*g), blob_field2(1:Bs(1)+2*g, 1:Bs(2)+2*g, 1:Bs(3)+2*g) )
+    if ( params_physics%d == 2 ) then
+        allocate( blob_field(1:Bs(1)+2*g, 1:Bs(2)+2*g, 1), blob_field2(1:Bs(1)+2*g, 1:Bs(2)+2*g, 1) )
+    else
+        allocate( blob_field(1:Bs(1)+2*g, 1:Bs(2)+2*g, 1:Bs(3)+2*g), blob_field2(1:Bs(1)+2*g, 1:Bs(2)+2*g, 1:Bs(3)+2*g) )
+    end if
 
 !---------------------------------------------------------------------------------------------
 ! main body
 
     ! center point of the pressure blob
-    mux(:) = params_physics%inicond_position(:)
+    mux = params_physics%inicond_position(1:params_physics%d)
 
     ! create blob fields
     call inicond_blob( params_physics, blob_field , x0, dx, params_physics%d, mux, (/ 2.0_rk, omega /) )
@@ -104,10 +108,10 @@ subroutine inicond_spark( params_physics, phi, x0, dx, gas )
     call getMassFractions(gas, burned(3:size(burned)))
 
     burned(1) = dsqrt(density(gas))
-    burned(2) = ( intEnergy_mass(gas) - sum( params_physics%dh(:) * burned(3:size(burned)) ) ) * density(gas)
     do n = 1, params_physics%species
         burned(2+n) = burned(2+n) * density(gas)
     end do
+    burned(2) = ( intEnergy_mass(gas) - sum( params_physics%dh(:) * burned(3:size(burned))/density(gas) ) ) * density(gas)
 
     ! blobing
     phi( :, :, :, rhoF) = unburned(1) + (burned(1) - unburned(1)) * blob_field(:, :, :)

@@ -74,6 +74,7 @@ module module_reactive_navier_stokes
     include "INI/inicond_spark.f90"
     include "INI/inicond_blob.f90"
     include "INI/inicond_taylor_green.f90"
+    include "INI/inicond_vortex.f90"
     !--------------------------------------------------
 
     !----- FILTER -------------------------------------
@@ -87,10 +88,12 @@ module module_reactive_navier_stokes
     include "RHS/RHS_3D_CANTERA_navier_stokes_reactive_periodicBC.f90"
     include "RHS/RHS_diff_subroutines.f90"
     include "RHS/diff_wrapper_3D.f90"
+    include "RHS/diff_wrapper_2D.f90"
     include "RHS/RHS_3D_navier_stokes_non_reactive_periodicBC.f90"
     include "RHS/RHS_3D_CANTERA_navier_stokes_reactive_non_periodicBC.f90"
     include "RHS/boundaries_xyz.f90"
     include "RHS/set_penalization.f90"
+    include "RHS/RHS_2D_CANTERA_navier_stokes_reactive_periodicBC.f90"
     !--------------------------------------------------
 
     !----- TIME ---------------------------------------

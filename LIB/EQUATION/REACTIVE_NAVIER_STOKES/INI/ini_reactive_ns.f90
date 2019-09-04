@@ -43,6 +43,9 @@ subroutine ini_reactive_ns( params_physics, phi, x0, dx, gas )
     ! loop variable
     integer(kind=ik)                        :: k
 
+    ! dummy array to store values for cases with multiple iniconds
+    real(kind=rk)                           :: dummy(4)
+
 !---------------------------------------------------------------------------------------------
 ! variables initialization
 
@@ -74,7 +77,7 @@ subroutine ini_reactive_ns( params_physics, phi, x0, dx, gas )
             !---------------------------------------------------------------------------------------------
             ! check chemistry
             if (params_physics%chemistry_model /= 'cantera') then
-                call abort(090819002,"ERROR: you can not use current chemistry model with cantera spark initial conditions!.")
+                call abort(090819002,"ERROR: you can not use current chemistry model with cantera spark initial condition!.")
             end if
 
             ! set velocity to zero
@@ -111,6 +114,32 @@ subroutine ini_reactive_ns( params_physics, phi, x0, dx, gas )
             ! magnitude of blob is between [0,1]
             ! so: set up here pressure blob magnitude
             phi(:, :, :, EF) = params_physics%inicond_p + phi(:, :, :, EF) * params_physics%inicond_scales(1)
+
+        case ("flame_vortex")
+            !---------------------------------------------------------------------------------------------
+            ! works only with cantera chemistry
+            if (params_physics%chemistry_model /= 'cantera') then
+                call abort(040919001,"ERROR: you can not use current chemistry model with flame vortex initial condition!.")
+            end if
+
+            ! set velocity field
+            call inicond_vortex( params_physics, phi, x0, dx, params_physics%d )
+
+            ! initialize chemistry, note: subroutine returns skew symmetric values (because of rho computation inside)
+            ! note: change inicond position here, because burned gas blob should place in front of vortex
+            ! /todo: from ini file?
+
+            dummy(1:2) = params_physics%inicond_position(1:2)
+            dummy(3:4) = params_physics%inicond_scales(1:2)
+
+            params_physics%inicond_position(1) = 0.6_rk * params_physics%L(1)
+            params_physics%inicond_position(2) = 0.5_rk * params_physics%L(2)
+            params_physics%inicond_scales(1:2) = params_physics%inicond_scales(4:5)
+
+            call inicond_spark( params_physics, phi, x0, dx, gas )
+
+            params_physics%inicond_position(1:2) = dummy(1:2)
+            params_physics%inicond_scales(1:2)   = dummy(3:4)
 
         case default
             call abort(091018002,"ERROR: unknown ini condition for reactive navier stokes.")

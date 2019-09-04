@@ -150,16 +150,16 @@ subroutine statistics_reactive_ns( params_physics, time, phi, phi_work, x0, dx, 
         !-------------------------------
         ! mean dilatational dissipation
         !-------------------------------
-        call compute_dilatational_dissipation(phi(:,:,:,UxF)/phi(:,:,:,rhoF), &
-                                              phi(:,:,:,UyF)/phi(:,:,:,rhoF), &
-                                              phi(:,:,:,UzF)/phi(:,:,:,rhoF), &
-                                              dx, Bs, g, params_physics%d, tmp(:,:,:,1:6))
-
         if ( params_physics%d == 2 ) then
             ! /todo: 2D statistics
 
         else
             ! 3D statistics
+            call compute_dilatational_dissipation(phi(:,:,:,UxF)/phi(:,:,:,rhoF), &
+                                                  phi(:,:,:,UyF)/phi(:,:,:,rhoF), &
+                                                  phi(:,:,:,UzF)/phi(:,:,:,rhoF), &
+                                                  dx, Bs, g, params_physics%d, tmp(:,:,:,1:6))
+
             do k = g+1, Bs(3)+g-1
                 do j = g+1, Bs(2)+g-1
                     do i = g+1, Bs(1)+g-1
@@ -181,16 +181,16 @@ subroutine statistics_reactive_ns( params_physics, time, phi, phi_work, x0, dx, 
         !-------------------------------
         ! mean solenodial dissipation
         !-------------------------------
-        call compute_solenoidal_dissipation(phi(:,:,:,UxF)/phi(:,:,:,rhoF), &
-                                            phi(:,:,:,UyF)/phi(:,:,:,rhoF), &
-                                            phi(:,:,:,UzF)/phi(:,:,:,rhoF), &
-                                            dx, Bs, g, params_physics%d, tmp(:,:,:,1:6))
-
         if ( params_physics%d == 2 ) then
             ! /todo: 2D statistics
 
         else
             ! 3D statistics
+            call compute_solenoidal_dissipation(phi(:,:,:,UxF)/phi(:,:,:,rhoF), &
+                                                phi(:,:,:,UyF)/phi(:,:,:,rhoF), &
+                                                phi(:,:,:,UzF)/phi(:,:,:,rhoF), &
+                                                dx, Bs, g, params_physics%d, tmp(:,:,:,1:6))
+
             do k = g+1, Bs(3)+g-1
                 do j = g+1, Bs(2)+g-1
                     do i = g+1, Bs(1)+g-1
@@ -253,7 +253,39 @@ subroutine statistics_reactive_ns( params_physics, time, phi, phi_work, x0, dx, 
         !-------------------------------------------------------------------------
 
         if ( params_physics%d == 2 ) then
-            ! /todo: 2D statistics
+            ! 2D statistics
+            do j = g+1, Bs(2)+g-1
+                do i = g+1, Bs(1)+g-1
+
+                    ! avoid double computations
+                    dummy(1) = phi(i, j, 1, rhoF)**2.0_rk
+                    dummy(2) = phi(i, j, 1, UxF) / phi(i, j, 1, rhoF)
+                    dummy(3) = phi(i, j, 1, UyF) / phi(i, j, 1, rhoF)
+
+                    !-----------------------
+                    ! mean fluid properties
+                    !-----------------------
+                    params_physics%rho_mean = params_physics%rho_mean + dummy(1)
+                    params_physics%u_mean   = params_physics%u_mean   + dummy(2)
+                    params_physics%v_mean   = params_physics%v_mean   + dummy(3)
+
+                    !-----------------------
+                    ! mean energies
+                    !-----------------------
+                    ! note: total energy assume pressure as energy field
+                    ! for other chemistry (e.g. cantera) use e_kin + e_int as total energy in postprocessing!
+                    ! /todo: add chemical energy?
+                    params_physics%e_kin_mean = params_physics%e_kin_mean + &
+                                       0.5_rk * ( dummy(2)**2.0_rk + dummy(3)**2.0_rk )
+
+                    params_physics%e_int_mean = params_physics%e_int_mean + phi(i, j, 1, EF)
+
+                    params_physics%e_tot_mean = params_physics%e_tot_mean + &
+                                       0.5_rk * ( dummy(2)**2.0_rk + dummy(3)**2.0_rk ) + &
+                                       1.0_rk / ( params_physics%gamma_ - 1.0_rk ) * phi(i, j, 1, EF) / dummy(1)
+                        
+                end do
+            end do
 
         else
             ! 3D statistics
@@ -285,7 +317,6 @@ subroutine statistics_reactive_ns( params_physics, time, phi, phi_work, x0, dx, 
                                            0.5_rk * ( dummy(2)**2.0_rk + dummy(3)**2.0_rk + dummy(4)**2.0_rk )
 
                         params_physics%e_int_mean = params_physics%e_int_mean + phi(i, j, k, EF)
-
 
                         params_physics%e_tot_mean = params_physics%e_tot_mean + &
                                            0.5_rk * ( dummy(2)**2.0_rk + dummy(3)**2.0_rk + dummy(4)**2.0_rk ) + &

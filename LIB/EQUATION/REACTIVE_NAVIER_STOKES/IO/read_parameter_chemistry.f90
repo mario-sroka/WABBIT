@@ -118,7 +118,9 @@ subroutine read_parameter_chemistry( params_physics, filename, gas )
         end do
 
         ! get enthalpies of formation
-        call setState_TPX(gas, params_physics%T0, params_physics%inicond_p, params_physics%inicond_X )
+        ! use here allways T0 = 298.15 K and p0 = 101330.0 Pa !
+        ! mole fraction X is here a dummy
+        call setState_TPX(gas, 298.15_rk, 101330.0_rk, params_physics%inicond_X )
         call getEnthalpies_RT(gas, params_physics%dh)
         params_physics%dh = params_physics%dh * params_physics%gas_constant * params_physics%T0
         ! correction 

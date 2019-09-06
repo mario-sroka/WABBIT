@@ -163,7 +163,32 @@ subroutine RHS_3D_CANTERA_navier_stokes_reactive_non_periodicBC(params_physics, 
     ! forcing
     !#########################################################################################
     if ( params_physics%forcing ) then
-        ! /todo
+
+        ! lundgren forcing in physical space
+        ! pure solenoidal forcing, /todo maybe implement other forcing methods
+        ! --------------------------------------------------------------------
+        ! first: compute IDFT to get the fourier filtered velocity field
+        call compute_IDFT( params_physics, params_physics%phi_hat_s(:,:,:,1), dummy(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g), x0, delta_x )
+        call compute_IDFT( params_physics, params_physics%phi_hat_s(:,:,:,2), dummy2(g+1:Bs(1)+g, g+1:Bs(2)+g, g+1:Bs(3)+g), x0, delta_x )
+        call compute_IDFT( params_physics, params_physics%phi_hat_s(:,:,:,3), dummy3(g+1:Bs(1)+g, g+1:Bs(2)+g, g+1:Bs(3)+g), x0, delta_x )
+
+        ! second: forcing strength
+        ! use mu0 as dummy
+        mu0 = - params_physics%target_force * ( params_physics%epsilon_s_mean - params_physics%eps_s_target ) / params_physics%eps_s_target
+
+        ! third: add forcing to rhs
+        rhs(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g, UxF) = rhs(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g, UxF) + mu0 * rho(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g) &
+                                                         * dummy(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g)  * phi1_inv(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g)
+        rhs(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g, UyF) = rhs(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g, UyF) + mu0 * rho(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g) &
+                                                         * dummy2(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g) * phi1_inv(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g)
+        rhs(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g, UzF) = rhs(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g, UzF) + mu0 * rho(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g) &
+                                                         * dummy3(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g) * phi1_inv(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g)
+
+        rhs(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g, EF)  = rhs(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g, EF) - mu0 * rho(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g) &
+                                                         * ( u(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g) * dummy(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g)  &
+                                                           + v(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g) * dummy2(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g) &
+                                                           + w(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g) * dummy3(g+1:Bs(1)+g,  g+1:Bs(2)+g, g+1:Bs(3)+g) )
+
     end if
 
     !#########################################################################################

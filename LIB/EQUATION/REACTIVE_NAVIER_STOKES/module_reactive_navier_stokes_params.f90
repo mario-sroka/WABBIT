@@ -153,6 +153,7 @@ module module_reactive_navier_stokes_params
         real(kind=rk)       :: w_mean_0         = 0.0_rk
 
         real(kind=rk)       :: mu_mean          = 0.0_rk ! viscosity mean value
+        real(kind=rk)       :: mean_fuel        = 0.0_rk ! mean fuel
 
         ! forcing parameter
         logical             :: forcing          = .false.! enable/disable forcing

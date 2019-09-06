@@ -130,6 +130,7 @@ subroutine statistics_reactive_ns( params_physics, time, phi, phi_work, x0, dx, 
         params_physics%v_mean           = 0.0_rk
         params_physics%w_mean           = 0.0_rk
         params_physics%mu_mean          = 0.0_rk
+        params_physics%mean_fuel        = 0.0_rk
 
         ! fourier coefficients
         if (params_physics%forcing) then
@@ -403,7 +404,11 @@ subroutine statistics_reactive_ns( params_physics, time, phi, phi_work, x0, dx, 
                             call setState_UV(gas, dummy(3), 1.0_rk/dummy(1)  )
 
                             ! viscosity
-                            params_physics%mu_mean = params_physics%mu_mean +  viscosity(gas)
+                            params_physics%mu_mean = params_physics%mu_mean + viscosity(gas)
+
+                            ! mean fuel
+                            ! assume fuel is at first datafield?
+                            params_physics%mean_fuel = params_physics%mean_fuel + phi(i,j,k,YF)
 
                         end do
                     end do
@@ -508,6 +513,10 @@ subroutine statistics_reactive_ns( params_physics, time, phi, phi_work, x0, dx, 
         dummy(1) = params_physics%mu_mean / real(gridNodes, kind=rk)
         call MPI_Allreduce(dummy(1), params_physics%mu_mean, 1, MPI_DOUBLE_PRECISION, MPI_SUM, WABBIT_COMM, ierr)
 
+        ! mean fuel
+        dummy(1) = params_physics%mean_fuel / real(gridNodes, kind=rk)
+        call MPI_Allreduce(dummy(1), params_physics%mean_fuel, 1, MPI_DOUBLE_PRECISION, MPI_SUM, WABBIT_COMM, ierr)
+
         !-------------------------------------------------------------------------
         ! turbulent kinetic energy
         !-------------------------------------------------------------------------
@@ -609,6 +618,11 @@ subroutine statistics_reactive_ns( params_physics, time, phi, phi_work, x0, dx, 
             ! write mu mean to disk...
             open(14,file='mu_mean.t',status='unknown',position='append')
             write (14,'(2(es15.8,1x))') time, params_physics%mu_mean
+            close(14)
+
+            ! write mean fuel to disk...
+            open(14,file='mean_fuel.t',status='unknown',position='append')
+            write (14,'(2(es15.8,1x))') time, params_physics%mean_fuel
             close(14)
 
         end if

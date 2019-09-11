@@ -620,6 +620,11 @@ subroutine statistics_reactive_ns( params_physics, time, phi, phi_work, x0, dx, 
             write (14,'(2(es15.8,1x))') time, params_physics%mu_mean
             close(14)
 
+            ! write rho mean to disk...
+            open(14,file='rho_mean.t',status='unknown',position='append')
+            write (14,'(2(es15.8,1x))') time, params_physics%rho_mean
+            close(14)
+
             ! write mean fuel to disk...
             open(14,file='mean_fuel.t',status='unknown',position='append')
             write (14,'(2(es15.8,1x))') time, params_physics%mean_fuel

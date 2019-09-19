@@ -81,6 +81,7 @@ module module_reactive_navier_stokes
     include "FILTER/filter_reactive_ns.f90"
     include "FILTER/explicit_filter.f90"
     include "FILTER/filter_1D.f90"
+    include "FILTER/spectral_filter.f90"
     !--------------------------------------------------
 
     !----- RHS ----------------------------------------
@@ -202,7 +203,7 @@ module module_reactive_navier_stokes
             ! filter
             ! ---------------------------------------
             case('filter_data')
-                call filter_reactive_ns( params_physics, phi, phi_work, x0, dx, params_physics%filter_type )
+                call filter_reactive_ns( params_physics, phi, phi_work, x0, dx, stage, params_physics%filter_type )
 
             ! ---------------------------------------
             ! statistics

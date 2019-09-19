@@ -457,7 +457,7 @@ contains
     ! You just get a block data (e.g. ux, uy, uz, p) and apply your filter to it.
     ! Ghost nodes are assumed to be sync'ed.
     !-----------------------------------------------------------------------------
-    subroutine FILTER_meta(physics, time, u, g, x0, dx, work_array, boundary_flag)
+    subroutine FILTER_meta(physics, time, u, g, x0, dx, work_array, stage, boundary_flag)
         implicit none
         !> physics type
         character(len=*), intent(in) :: physics
@@ -478,6 +478,13 @@ contains
         ! the work array is an additional array which can be used to store temporal
         ! values of the statevector field
         real(kind=rk), intent(inout) :: work_array(1:,1:,1:,1:)
+
+        ! stage. there is 3 stages, init_stage, filter_stage and local_stage. 
+        ! init: initialize global quantaties
+        ! filter: do the filtering, sum global quantaties
+        ! post: second filter step on all blocks, use global quantaties here
+        character(len=*), intent(in) :: stage
+
         ! when implementing boundary conditions, it is necessary to now if the local field (block)
         ! is adjacent to a boundary, because the stencil has to be modified on the domain boundary.
         ! The boundary_flag tells you if the local field is adjacent to a domain boundary:
@@ -490,16 +497,18 @@ contains
 
         select case(physics)
         case ("ACM-new")
-            call filter_ACM( time, u, g, x0, dx,  work_array)
+            ! works only at filter_stage (traditional filtering)
+            if (stage=='filter_stage') call filter_ACM( time, u, g, x0, dx,  work_array)
 
         case ("ConvDiff-new")
             call abort(1009181817, "filter not implemented for convection-diffusion.")
 
         case ("navier_stokes")
-            call filter_NStokes( time, u, g, x0, dx, work_array, boundary_flag)
+            ! works only at filter_stage (traditional filtering)
+            if (stage=='filter_stage') call filter_NStokes( time, u, g, x0, dx, work_array, boundary_flag)
 
         case ("reactive_navier_stokes")
-            call interface_reactive_navier_stokes("filter_data", phi=u, phi_work=work_array, x0=x0, dx=dx)
+            call interface_reactive_navier_stokes("filter_data", phi=u, phi_work=work_array, stage=stage, x0=x0, dx=dx)
 
         case default
             call abort(2152001, "ERROR [filter_wrapper.f90]: physics_type is unknown "//trim(adjustl(physics)))

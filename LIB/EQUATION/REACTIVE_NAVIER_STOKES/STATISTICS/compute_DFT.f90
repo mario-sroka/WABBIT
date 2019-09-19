@@ -175,3 +175,117 @@ subroutine compute_DFT( params_physics, phi, phi_hat, x0, dx )
     end do
 
 end subroutine compute_DFT
+
+! ---------------------------------------------------------------------------
+! sort of a HACK
+! use this extra subroutine for full DFT, to exchange this subroutine someday
+! ---------------------------------------------------------------------------
+subroutine compute_DFT_full( params_physics, phi, phi_hat, x0, dx )
+
+!---------------------------------------------------------------------------------------------
+! variables
+
+    implicit none
+
+    !> parameter struct
+    type(type_params_rns), intent(inout)    :: params_physics
+
+    !> velocity component
+    real(kind=rk), intent(in)               :: phi(:, :, :)
+
+    !> array of fourier coefficients
+    complex(kind=rk), intent(inout)         :: phi_hat(:, :, :)
+
+    !> spacing and origin of block
+    real(kind=rk), intent(in)               :: x0(:), dx(:)
+
+    ! grid parameter, Lvl of fixed grid
+    integer(kind=ik)                        :: Bs(3), Ds(3), Lvl
+
+    ! loop parameter
+    integer(kind=ik)                        :: i, j, k, l
+    ! dummy variable
+    complex(kind=rk), allocatable, save     :: dummy(:,:,:)
+    ! start indexes
+    integer(kind=ik)                        :: start_i(3)
+
+!---------------------------------------------------------------------------------------------
+! variables initialization
+
+    ! note: DFT is computed on Bs-1 grid, to remove redundant nodes
+    ! assume Bs here is the blocksize with redundant node included
+    Bs = params_physics%Bs
+
+    Lvl = params_physics%maxLvl
+    ! note: domain size is calculated with max tree level, 
+    ! so this value should correspond to the real treelevel
+    Ds  = (Bs-1) * 2**Lvl
+
+    ! dummy arrays
+    if ( .not. allocated(dummy) ) allocate(dummy(Ds(1), Ds(2), Ds(3)))
+
+    ! start indexes for complex roots array
+    start_i = int( x0/dx+1.0_rk , kind=ik)
+
+!---------------------------------------------------------------------------------------------
+! main body
+
+    ! DFT in all three dimensions
+    do l = 1, Bs(1)
+        do k = 1, Bs(3)
+            do i = 1, Ds(2)
+
+                dummy(l,i,k) = phi(l,1,k) &
+                             * params_physics%rootsY( (i-1)*(start_i(2)-1) + 1)
+
+                do j = 2, Bs(2)-1
+
+                    dummy(l,i,k) = dummy(l,i,k) &
+                                 + phi(l,j,k) &
+                                 * params_physics%rootsY( (i-1)*(start_i(2)+j-2) + 1)
+
+                end do
+            end do
+        end do
+    end do
+
+
+    do l = 1, Bs(1)
+        do k = 1, Ds(2)
+            do i = 1, Ds(3)
+
+                phi_hat(l,k,i) = dummy(l,k,1) &
+                              * params_physics%rootsZ( (i-1)*(start_i(3)-1) + 1)
+
+                do j = 2, Bs(3)-1
+
+                    phi_hat(l,k,i) = phi_hat(l,k,i) &
+                                  + dummy(l,k,j) &
+                                  * params_physics%rootsZ( (i-1)*(start_i(3)+j-2) + 1)
+
+                end do
+            end do
+        end do
+    end do
+
+    do l = 1, Ds(2)
+        do k = 1, Ds(3)
+            do i = 1, Ds(1)
+
+                dummy(i,l,k) = phi_hat(1,l,k) &
+                             * params_physics%rootsX( (i-1)*(start_i(1)-1) + 1)
+
+                do j = 2, Bs(1)-1
+
+                    dummy(i,l,k) = dummy(i,l,k) &
+                                 + phi_hat(j,l,k) &
+                                 * params_physics%rootsX( (i-1)*(start_i(1)+j-2) + 1)
+
+                end do
+            end do
+        end do
+    end do
+
+    phi_hat(i,j,k) = dummy(i,j,k)/( real(Ds(1), kind=rk) * real(Ds(2), kind=rk) * real(Ds(3), kind=rk) )
+
+end subroutine compute_DFT_full

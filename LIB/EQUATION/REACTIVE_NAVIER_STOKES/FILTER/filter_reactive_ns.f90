@@ -19,7 +19,7 @@
 !
 ! ********************************************************************************************
 
-subroutine filter_reactive_ns( params_physics, phi, phi_work, x0, dx, filter_type )
+subroutine filter_reactive_ns( params_physics, phi, phi_work, x0, dx, stage, filter_type )
 
 !---------------------------------------------------------------------------------------------
 ! variables
@@ -35,6 +35,9 @@ subroutine filter_reactive_ns( params_physics, phi, phi_work, x0, dx, filter_typ
     !> spacing and origin of block
     real(kind=rk), intent(in)               :: x0(1:3), dx(1:3)
 
+    !> filter stage: init, filter or post
+    character(len=*), intent(in)            :: stage
+
     !> filter type, needed 
     character(len=*), intent(in)            :: filter_type
 
@@ -47,7 +50,11 @@ subroutine filter_reactive_ns( params_physics, phi, phi_work, x0, dx, filter_typ
     select case (filter_type)
 
         case('explicit_3pt', 'explicit_5pt', 'explicit_7pt', 'explicit_9pt', 'explicit_11pt')
-            call explicit_filter( params_physics, phi, phi_work, x0, dx )
+            ! no init or post stage
+            if ( stage=='filter_stage' ) call explicit_filter( params_physics, phi, phi_work, x0, dx )
+
+        case('spectral')
+            call spectral_filter( params_physics, phi, phi_work, x0, dx, stage )
 
         case('no_filter')
             ! nothing to do

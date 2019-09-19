@@ -8,6 +8,8 @@
 !> \version 0.5
 !> \author Pkrah
 !! \date 30/04/18 - create
+!! \date 12/09/19 - split filtering in init, filter and post stage
+!!                  use init and post only for reactive navier stokes!
 !!
 !
 !**********************************************************************************************
@@ -56,35 +58,47 @@ subroutine filter_wrapper(time, params, hvy_block, hvy_tmp, lgt_block, hvy_activ
     Bs    = params%Bs
     g     = params%n_ghosts
 
-    if ( params%filter_type == 'spectral' .and. params%physics_type == 'reactive_navier_stokes' ) then
-
-        ! notes: reactive navier stokes spectral filtering needs all data blocks
-        call filter_meta(params%physics_type, time, hvy_block(:,:,:,:,:), g, x0, dx, hvy_tmp(:,:,:,:,:), surface) 
-
-    else
-
-        ! traditional filtering
-        do k = 1, hvy_n
-          ! convert given hvy_id to lgt_id for block spacing routine
-          call hvy_id_to_lgt_id( lgt_id, hvy_active(k), params%rank, params%number_blocks )
-
-          ! level of the block:
-          level = lgt_block(lgt_id, params%max_treelevel+IDX_MESH_LVL)
-
-          if ((params%filter_only_maxlevel .and. level==params%max_treelevel) .or. .not. params%filter_only_maxlevel) then
-
-              ! get block spacing for RHS
-              call get_block_spacing_origin( params, lgt_id, lgt_block, x0, dx )
+    !-------------------------------------------------------------------------
+    ! 1st stage: init_stage. (called once, not for all blocks)
+    !-------------------------------------------------------------------------
+    if ( params%physics_type == 'reactive_navier_stokes' ) then
     
-              if ( .not. All(params%periodic_BC) ) then
-                ! check if block is adjacent to a boundary of the domain, if this is the case we use one sided stencils
-                call get_adjacent_boundary_surface_normal(params, lgt_id, lgt_block, params%max_treelevel, surface)
-              endif
+        ! call meta module once, use first active block id as dummy argument
+        call filter_meta(params%physics_type, time, hvy_block(:,:,:,:,1), g, x0, dx, &
+                         hvy_tmp(:,:,:,:,1), 'init_stage', surface)
 
-              call filter_meta(params%physics_type, time, hvy_block(:,:,:,:, hvy_active(k)), g, x0, dx,&
-                  hvy_tmp(:,:,:,:,hvy_active(k)),surface)
+    end if
+
+    !-------------------------------------------------------------------------
+    ! 2nd stage: filter_stage. (called for all blocks)
+    !-------------------------------------------------------------------------
+    ! traditional filtering
+    do k = 1, hvy_n
+      ! convert given hvy_id to lgt_id for block spacing routine
+      call hvy_id_to_lgt_id( lgt_id, hvy_active(k), params%rank, params%number_blocks )
+
+      ! level of the block:
+      level = lgt_block(lgt_id, params%max_treelevel+IDX_MESH_LVL)
+
+      if ((params%filter_only_maxlevel .and. level==params%max_treelevel) .or. .not. params%filter_only_maxlevel) then
+
+          ! get block spacing for RHS
+          call get_block_spacing_origin( params, lgt_id, lgt_block, x0, dx )
+    
+          if ( .not. All(params%periodic_BC) ) then
+            ! check if block is adjacent to a boundary of the domain, if this is the case we use one sided stencils
+            call get_adjacent_boundary_surface_normal(params, lgt_id, lgt_block, params%max_treelevel, surface)
           endif
-        enddo
+
+          call filter_meta(params%physics_type, time, hvy_block(:,:,:,:, hvy_active(k)), g, x0, dx,&
+              hvy_tmp(:,:,:,:,hvy_active(k)), 'filter_stage', surface)
+      endif
+    enddo
+
+    !-------------------------------------------------------------------------
+    ! 3rd stage: post_stage. (called for all blocks)
+    !-------------------------------------------------------------------------
+    if ( params%physics_type == 'reactive_navier_stokes' ) then
 
     end if
 

@@ -78,13 +78,30 @@ subroutine read_parameter_combustion( params_physics, filename, gas )
     ! forcing parameters
     call read_param_mpi(FILE, 'Combustion', 'forcing', params_physics%forcing, .false. )
     call read_param_mpi(FILE, 'Combustion', 'k0', params_physics%k0, 0.0_rk )
+    call read_param_mpi(FILE, 'Combustion', 'w0', params_physics%spectral_w_limit, 0.0_rk )
     call read_param_mpi(FILE, 'Combustion', 'kmax', params_physics%kmax, 1 )
     call read_param_mpi(FILE, 'Combustion', 'eps_s_target', params_physics%eps_s_target, 0.0_rk )
     call read_param_mpi(FILE, 'Combustion', 'target_force', params_physics%target_force, 0.0_rk )
 
-    ! allocate fourier coeffcients array, only if forcing enabled
-    if ( params_physics%forcing ) then
-        allocate( params_physics%phi_hat( params_physics%kmax, params_physics%kmax, params_physics%kmax, 3 ) )
+    ! allocate fourier coeffcients array, only if forcing or spectral filtering enabled
+    if ( (params_physics%forcing) .or. (params_physics%filter_type=='spectral') ) then
+
+        ! Domainsizes
+        ! -----------
+        dummy(1) = (params_physics%Bs(1)-1) * 2**params_physics%maxLvl
+        dummy(2) = (params_physics%Bs(2)-1) * 2**params_physics%maxLvl
+        dummy(3) = (params_physics%Bs(3)-1) * 2**params_physics%maxLvl
+
+        ! arrays for fourier coefficients
+        ! -------------------------------
+        ! for spectral filtering, allocate array for all fourier coefficients
+        ! otherwise allocate reduced array with kmax size
+        if (params_physics%filter_type=='spectral') then
+            allocate( params_physics%phi_hat( dummy(1), dummy(2), dummy(3), params_physics%NdF ) )
+        else
+            allocate( params_physics%phi_hat( params_physics%kmax, params_physics%kmax, params_physics%kmax, 3 ) )
+        end if
+
         allocate( params_physics%phi_hat_d( params_physics%kmax, params_physics%kmax, params_physics%kmax, 3 ) )
         allocate( params_physics%phi_hat_s( params_physics%kmax, params_physics%kmax, params_physics%kmax, 3 ) )
 
@@ -92,26 +109,22 @@ subroutine read_parameter_combustion( params_physics, filename, gas )
         params_physics%phi_hat_s = 0.0_rk
 
         ! complex roots of unity
-        ! Domainsizes
-        dummy(1) = (params_physics%Bs(1)-1) * 2**params_physics%maxLvl
-        dummy(2) = (params_physics%Bs(2)-1) * 2**params_physics%maxLvl
-        dummy(3) = (params_physics%Bs(3)-1) * 2**params_physics%maxLvl
-
-        ! allocate
-        allocate( params_physics%rootsX( dummy(1) * params_physics%kmax  ) )
-        allocate( params_physics%rootsY( dummy(2) * params_physics%kmax  ) )
-        allocate( params_physics%rootsZ( dummy(3) * params_physics%kmax  ) )
+        ! ----------------------
+        ! allocate maximal possible size
+        allocate( params_physics%rootsX( dummy(1) * dummy(1)  ) )
+        allocate( params_physics%rootsY( dummy(2) * dummy(2)  ) )
+        allocate( params_physics%rootsZ( dummy(3) * dummy(3)  ) )
 
         ! unity roots
-        do k = 1, dummy(1) * params_physics%kmax
+        do k = 1, dummy(1) * dummy(1)
             params_physics%rootsX(k) = exp( cmplx( 0.0_rk, 2.0_rk*pi/real(dummy(1), kind=rk), kind=rk) ) &
                                      **real(k-1, kind=rk)
         end do
-        do k = 1, dummy(2) * params_physics%kmax
+        do k = 1, dummy(2) * dummy(2)
             params_physics%rootsY(k) = exp( cmplx( 0.0_rk, 2.0_rk*pi/real(dummy(2), kind=rk), kind=rk) ) &
                                      **real(k-1, kind=rk)
         end do
-        do k = 1, dummy(3) * params_physics%kmax
+        do k = 1, dummy(3) * dummy(3)
             params_physics%rootsZ(k) = exp( cmplx( 0.0_rk, 2.0_rk*pi/real(dummy(3), kind=rk), kind=rk) ) &
                                      **real(k-1, kind=rk)
         end do

@@ -159,6 +159,7 @@ module module_reactive_navier_stokes_params
         logical             :: forcing          = .false.! enable/disable forcing
         real(kind=rk)       :: k0               = 0.0_rk ! wavenumber limit
         integer(kind=ik)    :: kmax             = 1      ! loop limit
+        real(kind=rk)       :: spectral_w_limit = 0.0_rk ! spectral filter wavenumber limit
 
         complex(kind=rk)    ,&
         allocatable         :: phi_hat(:,:,:,:)          ! fourier coeffcients

@@ -53,7 +53,7 @@ subroutine boundaries_xyz( onesided, x0, dx, L, Bs, g, periodic_BC)
         onesided(2,1) = .NOT.(periodic_BC(1))
     end if
     ! x-
-    if ( abs( x0(1) - 0.0_rk ) < 1e-12_rk ) then
+    if ( ( ( x0(1) - dx(1) ) - 1e-16_rk ) < 0.0_rk ) then
         onesided(1,1) = .NOT.(periodic_BC(1))
     end if
 
@@ -62,7 +62,7 @@ subroutine boundaries_xyz( onesided, x0, dx, L, Bs, g, periodic_BC)
         onesided(2,2) = .NOT.(periodic_BC(2))
     end if
     ! y-
-    if ( abs( x0(2) - 0.0_rk ) < 1e-12_rk ) then
+    if ( ( ( x0(2) - dx(2) ) - 1e-16_rk ) < 0.0_rk ) then
         onesided(1,2) = .NOT.(periodic_BC(2))
     end if
 
@@ -71,7 +71,7 @@ subroutine boundaries_xyz( onesided, x0, dx, L, Bs, g, periodic_BC)
         onesided(2,3) = .NOT.(periodic_BC(3))
     end if
     ! z-
-    if ( abs( x0(3) - 0.0_rk ) < 1e-12_rk ) then
+    if ( ( ( x0(3) - dx(3) ) - 1e-16_rk ) < 0.0_rk ) then
         onesided(1,3) = .NOT.(periodic_BC(3))
     end if
 

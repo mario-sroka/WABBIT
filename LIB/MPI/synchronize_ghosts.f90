@@ -64,7 +64,7 @@ subroutine sync_ghosts( params, lgt_block, hvy_block, hvy_neighbor, hvy_active, 
             ! -------------------------------
 
             ! x+
-            if ( abs( x0(1) + dx(1)*real(Bs(1)-1,kind=rk)  - params%domain_size(1) ) < 1e-12_rk ) then
+            if ( ( ( x0(1) + dx(1)*real(Bs(1)-1,kind=rk)  - params%domain_size(1) ) + 1e-14_rk ) > 0.0_rk ) then
                 ! check non periodicity
                 if ( .NOT.(params%periodic_BC(1)) ) then
                     do i = Bs(1)+g, Bs(1)+2*g
@@ -74,51 +74,11 @@ subroutine sync_ghosts( params, lgt_block, hvy_block, hvy_neighbor, hvy_active, 
             end if
 
             ! x-
-            if ( abs( x0(1) - 0.0_rk ) < 1e-12_rk ) then
+            if ( ( ( x0(1) - dx(1) ) - 1e-16_rk ) < 0.0_rk ) then
                 ! check non periodicity
                 if ( .NOT.(params%periodic_BC(1)) ) then
                     do i = 1, g+1
                         hvy_block(i, :, :, :, hvy_active(k)) = hvy_block(g+2, :, :, :, hvy_active(k))
-                    end do
-                end if
-            end if
-
-            ! y+
-            if ( abs( x0(2) + dx(2)*real(Bs(2)-1,kind=rk)  - params%domain_size(2) ) < 1e-12_rk ) then
-                ! check non periodicity
-                if ( .NOT.(params%periodic_BC(2)) ) then
-                    do i = Bs(2)+g, Bs(2)+2*g
-                        hvy_block(:, i, :, :, hvy_active(k)) = hvy_block(:, Bs(2)+g-1, :, :, hvy_active(k))
-                    end do
-                end if
-            end if
-
-            ! y-
-            if ( abs( x0(2) - 0.0_rk ) < 1e-12_rk ) then
-                ! check non periodicity
-                if ( .NOT.(params%periodic_BC(2)) ) then
-                    do i = 1, g+1
-                        hvy_block(:, i, :, :, hvy_active(k)) = hvy_block(:, g+2, :, :, hvy_active(k))
-                    end do
-                end if
-            end if
-
-            ! z+
-            if ( abs( x0(3) + dx(3)*real(Bs(3)-1,kind=rk)  - params%domain_size(3) ) < 1e-12_rk ) then
-                ! check non periodicity
-                if ( .NOT.(params%periodic_BC(3)) ) then
-                    do i = Bs(3)+g, Bs(3)+2*g
-                        hvy_block(:, :, i, :, hvy_active(k)) = hvy_block(:, :, Bs(3)+g-1, :, hvy_active(k))
-                    end do
-                end if
-            end if
-
-            ! z-
-            if ( abs( x0(3) - 0.0_rk ) < 1e-12_rk ) then
-                ! check non periodicity
-                if ( .NOT.(params%periodic_BC(3)) ) then
-                    do i = 1, g+1
-                        hvy_block(:, :, i, :, hvy_active(k)) = hvy_block(:, :, g+2, :, hvy_active(k))
                     end do
                 end if
             end if

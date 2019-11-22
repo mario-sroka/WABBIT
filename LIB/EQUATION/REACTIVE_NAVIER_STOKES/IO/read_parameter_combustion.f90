@@ -110,24 +110,49 @@ subroutine read_parameter_combustion( params_physics, filename, gas )
 
         ! complex roots of unity
         ! ----------------------
-        ! allocate maximal possible size
-        allocate( params_physics%rootsX( dummy(1) * dummy(1)  ) )
-        allocate( params_physics%rootsY( dummy(2) * dummy(2)  ) )
-        allocate( params_physics%rootsZ( dummy(3) * dummy(3)  ) )
+        if (params_physics%filter_type=='spectral') then
 
-        ! unity roots
-        do k = 1, dummy(1) * dummy(1)
-            params_physics%rootsX(k) = exp( cmplx( 0.0_rk, 2.0_rk*pi/real(dummy(1), kind=rk), kind=rk) ) &
-                                     **real(k-1, kind=rk)
-        end do
-        do k = 1, dummy(2) * dummy(2)
-            params_physics%rootsY(k) = exp( cmplx( 0.0_rk, 2.0_rk*pi/real(dummy(2), kind=rk), kind=rk) ) &
-                                     **real(k-1, kind=rk)
-        end do
-        do k = 1, dummy(3) * dummy(3)
-            params_physics%rootsZ(k) = exp( cmplx( 0.0_rk, 2.0_rk*pi/real(dummy(3), kind=rk), kind=rk) ) &
-                                     **real(k-1, kind=rk)
-        end do
+            ! allocate maximal size
+            allocate( params_physics%rootsX( dummy(1) * dummy(1) ) )
+            allocate( params_physics%rootsY( dummy(2) * dummy(2) ) )
+            allocate( params_physics%rootsZ( dummy(3) * dummy(3) ) )
+
+            ! unity roots
+            do k = 1, dummy(1) * dummy(1)
+                params_physics%rootsX(k) = exp( cmplx( 0.0_rk, 2.0_rk*pi/real(dummy(1), kind=rk), kind=rk) ) &
+                                         **real(k-1, kind=rk)
+            end do
+            do k = 1, dummy(2) * dummy(2)
+                params_physics%rootsY(k) = exp( cmplx( 0.0_rk, 2.0_rk*pi/real(dummy(2), kind=rk), kind=rk) ) &
+                                         **real(k-1, kind=rk)
+            end do
+            do k = 1, dummy(3) * dummy(3)
+                params_physics%rootsZ(k) = exp( cmplx( 0.0_rk, 2.0_rk*pi/real(dummy(3), kind=rk), kind=rk) ) &
+                                         **real(k-1, kind=rk)
+            end do
+
+        else
+       
+            ! allocate minimal size
+            allocate( params_physics%rootsX( dummy(1) * params_physics%kmax ) )
+            allocate( params_physics%rootsY( dummy(2) * params_physics%kmax ) )
+            allocate( params_physics%rootsZ( dummy(3) * params_physics%kmax ) )
+
+            ! unity roots
+            do k = 1, dummy(1) * params_physics%kmax
+                params_physics%rootsX(k) = exp( cmplx( 0.0_rk, 2.0_rk*pi/real(dummy(1), kind=rk), kind=rk) ) &
+                                         **real(k-1, kind=rk)
+            end do
+            do k = 1, dummy(2) * params_physics%kmax
+                params_physics%rootsY(k) = exp( cmplx( 0.0_rk, 2.0_rk*pi/real(dummy(2), kind=rk), kind=rk) ) &
+                                         **real(k-1, kind=rk)
+            end do
+            do k = 1, dummy(3) * params_physics%kmax
+                params_physics%rootsZ(k) = exp( cmplx( 0.0_rk, 2.0_rk*pi/real(dummy(3), kind=rk), kind=rk) ) &
+                                         **real(k-1, kind=rk)
+            end do
+
+        end if
 
     end if   
 
@@ -142,6 +167,13 @@ subroutine read_parameter_combustion( params_physics, filename, gas )
     call read_param_mpi(FILE, 'Combustion', 'v_ref', params_physics%v_ref, dummy2 )
     call read_param_mpi(FILE, 'Combustion', 'w_ref', params_physics%w_ref, dummy2 )
     call read_param_mpi(FILE, 'Combustion', 'es_ref', params_physics%es_ref, dummy2 )
+
+    ! allocate Y ref array
+    ! need here exact number of species? /TODO
+    allocate( params_physics%Y_ref( 9  , 2 ) )
+    ! reset
+    params_physics%Y_ref = -99.0_rk
+    call read_param_mpi(FILE, 'Combustion', 'Y_ref_1', params_physics%Y_ref(:,1), params_physics%Y_ref(:,1) )
 
     ! clean up
     call clean_ini_file_mpi(FILE)

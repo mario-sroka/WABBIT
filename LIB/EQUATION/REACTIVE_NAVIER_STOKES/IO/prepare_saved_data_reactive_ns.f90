@@ -108,6 +108,21 @@ subroutine prepare_saved_data_reactive_ns( params_physics, phi, phi_work, time, 
                 end if
 
             !---------------------------------------------------------------------------------
+            case("p")
+
+                if ( params_physics%chemistry_model == 'cantera' ) then
+
+                    ! cantera chemistry
+                    call compute_pressure( params_physics, phi, phi_work(:,:,:,k), gas )
+
+                else
+
+                    ! non cantera chemistry
+                    phi_work(:, :, :, k) = phi(:,:,:,EF)
+
+                end if
+
+            !---------------------------------------------------------------------------------
             case("wk")
 
                 if ( params_physics%chemistry_model == 'cantera' ) then

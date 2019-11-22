@@ -65,6 +65,7 @@ module module_reactive_navier_stokes
     include "IO/convert_to_primitive.f90"
     include "IO/convert_from_primitive.f90"
     include "IO/compute_temperature.f90"
+    include "IO/compute_pressure.f90"
     include "IO/compute_reaction_rate.f90"
     !--------------------------------------------------
 

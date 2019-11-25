@@ -411,39 +411,6 @@ subroutine  diffz_co_3D_opt( Bs, g, dz, u, dudz)
 
 end subroutine diffz_co_3D_opt
 
-subroutine  diffz_oc_3D_opt_2( Bs, g, dz, u, dudz)
-
-    integer(kind=ik), intent(in)    :: g, Bs(3)
-    real(kind=rk), intent(in)       :: dz
-    real(kind=rk), intent(in)       :: u(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
-    real(kind=rk), intent(out)      :: dudz(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
-
-    integer                         :: i, j, k
-    real(kind=rk)                   :: dz_inv
-
-    ! - do not use ghost nodes
-    ! - write loops explicitly,
-    ! - use multiplication for dx
-    ! - access array in column-major order
-
-    dz_inv = 1.0_rk/(12.0_rk*dz)
-
-    do j = g-1, Bs(2)+g+2
-        do i = g-1, Bs(1)+g+2
-            dudz(i,j,g+1) = ( - 18.0_rk*u(i,j,g+1) + 24.0_rk*u(i,j,g+2) - 6.0_rk*u(i,j,g+3) ) * dz_inv
-            dudz(i,j,g+2) = ( - 6.0_rk*u(i,j,g+1)                       + 6.0_rk*u(i,j,g+3) ) * dz_inv
-        end do
-    end do
-    do k = g+3, Bs(3)+g+2
-        do j = g-1, Bs(2)+g+2
-            do i = g-1, Bs(1)+g+2
-                dudz(i,j,k) = ( u(i,j,k-2) - 8.0_rk*u(i,j,k-1) + 8.0_rk*u(i,j,k+1) - u(i,j,k+2) ) * dz_inv
-            end do
-        end do
-    end do
-
-end subroutine diffz_oc_3D_opt_2
-
 subroutine  diffz_co_3D_opt_2( Bs, g, dz, u, dudz)
 
     integer(kind=ik), intent(in)    :: g, Bs(3)
@@ -476,6 +443,39 @@ subroutine  diffz_co_3D_opt_2( Bs, g, dz, u, dudz)
     end do
 
 end subroutine diffz_co_3D_opt_2
+
+subroutine  diffz_oc_3D_opt_2( Bs, g, dz, u, dudz)
+
+    integer(kind=ik), intent(in)    :: g, Bs(3)
+    real(kind=rk), intent(in)       :: dz
+    real(kind=rk), intent(in)       :: u(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
+    real(kind=rk), intent(out)      :: dudz(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
+
+    integer                         :: i, j, k
+    real(kind=rk)                   :: dz_inv
+
+    ! - do not use ghost nodes
+    ! - write loops explicitly,
+    ! - use multiplication for dx
+    ! - access array in column-major order
+
+    dz_inv = 1.0_rk/(12.0_rk*dz)
+
+    do j = g-1, Bs(2)+g+2
+        do i = g-1, Bs(1)+g+2
+            dudz(i,j,g+1) = ( - 18.0_rk*u(i,j,g+1) + 24.0_rk*u(i,j,g+2) - 6.0_rk*u(i,j,g+3) ) * dz_inv
+            dudz(i,j,g+2) = ( - 6.0_rk*u(i,j,g+1)                       + 6.0_rk*u(i,j,g+3) ) * dz_inv
+        end do
+    end do
+    do k = g+3, Bs(3)+g+2
+        do j = g-1, Bs(2)+g+2
+            do i = g-1, Bs(1)+g+2
+                dudz(i,j,k) = ( u(i,j,k-2) - 8.0_rk*u(i,j,k-1) + 8.0_rk*u(i,j,k+1) - u(i,j,k+2) ) * dz_inv
+            end do
+        end do
+    end do
+
+end subroutine diffz_oc_3D_opt_2
 
 subroutine  diffxyz_c_3D_opt( Bs, g, dx, dy, dz, u, dudx, dudy, dudz)
 
@@ -592,3 +592,211 @@ subroutine  diffz_c_3D_opt( Bs, g, dz, u, dudz)
     end do
 
 end subroutine diffz_c_3D_opt
+
+
+
+!!! NEW subroutines
+!****************************************************************************************************
+subroutine  diff3D_x_c_gp( Bs, g, dx, u, dudx)
+
+    integer(kind=ik), intent(in)    :: g, Bs(3)
+    real(kind=rk), intent(in)       :: dx
+    real(kind=rk), intent(in)       :: u(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
+    real(kind=rk), intent(out)      :: dudx(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
+
+    integer                         :: i, j, k, gp, Bp(3)
+    real(kind=rk)                   :: dx_inv
+
+    ! -----------------------------------------------------------------------------------------------
+
+    dx_inv = 1.0_rk/(12.0_rk*dx)
+
+    gp = g+1
+    Bp = Bs+g
+
+    dudx(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = u(gp-2:Bp(1)-2, gp:Bp(2), gp:Bp(3)) 
+
+    dudx(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudx(gp:Bp(1), gp:Bp(2), gp:Bp(3)) &
+                                       - 8.0_rk * u(gp-1:Bp(1)-1, gp:Bp(2), gp:Bp(3)) 
+
+    dudx(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudx(gp:Bp(1), gp:Bp(2), gp:Bp(3)) &
+                                       + 8.0_rk * u(gp+1:Bp(1)+1, gp:Bp(2), gp:Bp(3)) 
+
+    dudx(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudx(gp:Bp(1), gp:Bp(2), gp:Bp(3)) &
+                                       - u(gp+2:Bp(1)+2, gp:Bp(2), gp:Bp(3))
+
+    dudx(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudx(gp:Bp(1), gp:Bp(2), gp:Bp(3)) * dx_inv
+
+end subroutine diff3D_x_c_gp
+
+!****************************************************************************************************
+
+subroutine  diff3D_y_c_gp( Bs, g, dy, u, dudy)
+
+    integer(kind=ik), intent(in)    :: g, Bs(3)
+    real(kind=rk), intent(in)       :: dy
+    real(kind=rk), intent(in)       :: u(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
+    real(kind=rk), intent(out)      :: dudy(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
+
+    integer                         :: i, j, k, gp, Bp(3)
+    real(kind=rk)                   :: dy_inv
+
+    ! -----------------------------------------------------------------------------------------------
+
+    dy_inv = 1.0_rk/(12.0_rk*dy)
+
+    gp = g+1
+    Bp = Bs+g
+
+    dudy(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = u(gp:Bp(1), gp-2:Bp(2)-2, gp:Bp(3)) 
+
+    dudy(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudy(gp:Bp(1), gp:Bp(2), gp:Bp(3)) &
+                                       - 8.0_rk * u(gp:Bp(1), gp-1:Bp(2)-1, gp:Bp(3)) 
+
+    dudy(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudy(gp:Bp(1), gp:Bp(2), gp:Bp(3)) &
+                                       + 8.0_rk * u(gp:Bp(1), gp+1:Bp(2)+1, gp:Bp(3)) 
+
+    dudy(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudy(gp:Bp(1), gp:Bp(2), gp:Bp(3)) &
+                                       - u(gp:Bp(1), gp+2:Bp(2)+2, gp:Bp(3))
+
+    dudy(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudy(gp:Bp(1), gp:Bp(2), gp:Bp(3)) * dy_inv
+
+end subroutine diff3D_y_c_gp
+
+!****************************************************************************************************
+
+subroutine  diff3D_z_c_gp( Bs, g, dz, u, dudz)
+
+    integer(kind=ik), intent(in)    :: g, Bs(3)
+    real(kind=rk), intent(in)       :: dz
+    real(kind=rk), intent(in)       :: u(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
+    real(kind=rk), intent(out)      :: dudz(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
+
+    integer                         :: i, j, k, gp, Bp(3)
+    real(kind=rk)                   :: dz_inv
+
+    ! -----------------------------------------------------------------------------------------------
+
+    dz_inv = 1.0_rk/(12.0_rk*dz)
+
+    gp = g+1
+    Bp = Bs+g
+
+    dudz(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = u(gp:Bp(1), gp:Bp(2), gp-2:Bp(3)-2) 
+
+    dudz(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudz(gp:Bp(1), gp:Bp(2), gp:Bp(3)) &
+                                       - 8.0_rk * u(gp:Bp(1), gp:Bp(2), gp-1:Bp(3)-1) 
+
+    dudz(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudz(gp:Bp(1), gp:Bp(2), gp:Bp(3)) &
+                                       + 8.0_rk * u(gp:Bp(1), gp:Bp(2), gp+1:Bp(3)+1)
+
+    dudz(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudz(gp:Bp(1), gp:Bp(2), gp:Bp(3))&
+                                       - u(gp:Bp(1), gp:Bp(2), gp+2:Bp(3)+2)
+
+    dudz(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudz(gp:Bp(1), gp:Bp(2), gp:Bp(3)) * dz_inv
+
+end subroutine diff3D_z_c_gp
+
+!****************************************************************************************************
+
+subroutine  diff3D_x_c_gm( Bs, g, dx, u, dudx)
+
+    integer(kind=ik), intent(in)    :: g, Bs(3)
+    real(kind=rk), intent(in)       :: dx
+    real(kind=rk), intent(in)       :: u(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
+    real(kind=rk), intent(out)      :: dudx(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
+
+    integer                         :: i, j, k, gp, Bp(3)
+    real(kind=rk)                   :: dx_inv
+
+    ! -----------------------------------------------------------------------------------------------
+
+    dx_inv = 1.0_rk/(12.0_rk*dx)
+
+    gp = g-1
+    Bp = Bs+g+2
+
+    dudx(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = u(gp-2:Bp(1)-2, gp:Bp(2), gp:Bp(3)) 
+
+    dudx(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudx(gp:Bp(1), gp:Bp(2), gp:Bp(3)) &
+                                       - 8.0_rk * u(gp-1:Bp(1)-1, gp:Bp(2), gp:Bp(3)) 
+
+    dudx(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudx(gp:Bp(1), gp:Bp(2), gp:Bp(3)) &
+                                       + 8.0_rk * u(gp+1:Bp(1)+1, gp:Bp(2), gp:Bp(3)) 
+
+    dudx(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudx(gp:Bp(1), gp:Bp(2), gp:Bp(3)) &
+                                       - u(gp+2:Bp(1)+2, gp:Bp(2), gp:Bp(3))
+
+    dudx(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudx(gp:Bp(1), gp:Bp(2), gp:Bp(3)) * dx_inv
+
+end subroutine diff3D_x_c_gm
+
+!****************************************************************************************************
+
+subroutine  diff3D_y_c_gm( Bs, g, dy, u, dudy)
+
+    integer(kind=ik), intent(in)    :: g, Bs(3)
+    real(kind=rk), intent(in)       :: dy
+    real(kind=rk), intent(in)       :: u(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
+    real(kind=rk), intent(out)      :: dudy(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
+
+    integer                         :: i, j, k, gp, Bp(3)
+    real(kind=rk)                   :: dy_inv
+
+    ! -----------------------------------------------------------------------------------------------
+
+    dy_inv = 1.0_rk/(12.0_rk*dy)
+
+    gp = g-1
+    Bp = Bs+g+2
+
+    dudy(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = u(gp:Bp(1), gp-2:Bp(2)-2, gp:Bp(3)) 
+
+    dudy(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudy(gp:Bp(1), gp:Bp(2), gp:Bp(3)) &
+                                       - 8.0_rk * u(gp:Bp(1), gp-1:Bp(2)-1, gp:Bp(3)) 
+
+    dudy(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudy(gp:Bp(1), gp:Bp(2), gp:Bp(3)) &
+                                       + 8.0_rk * u(gp:Bp(1), gp+1:Bp(2)+1, gp:Bp(3)) 
+
+    dudy(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudy(gp:Bp(1), gp:Bp(2), gp:Bp(3)) &
+                                       - u(gp:Bp(1), gp+2:Bp(2)+2, gp:Bp(3))
+
+    dudy(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudy(gp:Bp(1), gp:Bp(2), gp:Bp(3)) * dy_inv
+
+end subroutine diff3D_y_c_gm
+
+!****************************************************************************************************
+
+subroutine  diff3D_z_c_gm( Bs, g, dz, u, dudz)
+
+    integer(kind=ik), intent(in)    :: g, Bs(3)
+    real(kind=rk), intent(in)       :: dz
+    real(kind=rk), intent(in)       :: u(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
+    real(kind=rk), intent(out)      :: dudz(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
+
+    integer                         :: i, j, k, gp, Bp(3)
+    real(kind=rk)                   :: dz_inv
+
+    ! -----------------------------------------------------------------------------------------------
+
+    dz_inv = 1.0_rk/(12.0_rk*dz)
+
+    gp = g-1
+    Bp = Bs+g+2
+
+    dudz(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = u(gp:Bp(1), gp:Bp(2), gp-2:Bp(3)-2) 
+
+    dudz(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudz(gp:Bp(1), gp:Bp(2), gp:Bp(3)) &
+                                       - 8.0_rk * u(gp:Bp(1), gp:Bp(2), gp-1:Bp(3)-1) 
+
+    dudz(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudz(gp:Bp(1), gp:Bp(2), gp:Bp(3)) &
+                                       + 8.0_rk * u(gp:Bp(1), gp:Bp(2), gp+1:Bp(3)+1)
+
+    dudz(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudz(gp:Bp(1), gp:Bp(2), gp:Bp(3))&
+                                       - u(gp:Bp(1), gp:Bp(2), gp+2:Bp(3)+2)
+
+    dudz(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dudz(gp:Bp(1), gp:Bp(2), gp:Bp(3)) * dz_inv
+
+end subroutine diff3D_z_c_gm
+
+!****************************************************************************************************

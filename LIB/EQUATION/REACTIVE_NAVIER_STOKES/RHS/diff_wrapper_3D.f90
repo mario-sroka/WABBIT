@@ -59,6 +59,37 @@ subroutine  diff_wrapper_3D( Bs, g, u, deriv_type, onesided, dx, dy, dz, dudx, d
 
     select case(deriv_type)
 
+        !!! NEW wrapper, remove old stuff later
+        ! periodic, central difference
+        !-------------------------------------------------------------------------------------
+        ! derivative from g+1 to Bs+g
+        !-------------------------------------------------------------------------------------
+        case ("diff_x_c_gp")
+            call diff3D_x_c_gp( Bs, g, dx, u, dudx)
+
+        case ("diff_y_c_gp")
+            call diff3D_y_c_gp( Bs, g, dy, u, dudy)
+
+        case ("diff_z_c_gp")
+            call diff3D_z_c_gp( Bs, g, dz, u, dudz)
+
+        ! derivative from g-1 to Bs+g+2
+        !-------------------------------------------------------------------------------------
+        case ("diff_x_c_gm")
+            call diff3D_x_c_gm( Bs, g, dx, u, dudx)
+
+        case ("diff_y_c_gm")
+            call diff3D_y_c_gm( Bs, g, dy, u, dudy)
+
+        case ("diff_z_c_gm")
+            call diff3D_z_c_gm( Bs, g, dz, u, dudz)
+
+
+
+
+
+
+
         ! u_x, u_y, u_z periodic
         case ("periodic_u_xyz")
             ! periodic
@@ -176,6 +207,9 @@ subroutine  diff_wrapper_3D( Bs, g, u, deriv_type, onesided, dx, dy, dz, dudx, d
                 call diffz_c_3D_opt( Bs, g, dz, u, dudz)
 
             end if
+
+        case default
+            call abort(251119001,"unknown derivative subroutine.")
 
     end select
 

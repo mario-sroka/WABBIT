@@ -111,9 +111,14 @@ subroutine RHS_2D_CANTERA_navier_stokes_reactive_periodicBC(params_physics, Bs, 
     ! set physics parameters for readability
     dissipation = params_physics%dissipation
 
+    ! compute 1/rho for better performance
+    phi1_inv(:,:)  = 1.0_rk / phi(:,:,1,rhoF)
+
     ! primitive variables
     ! use rhs as dummy fields
-    call convert_to_primitive( params_physics, phi, rhs )
+    ! use D as dummy
+    D(:,:,1) = phi1_inv
+    call convert_to_primitive( params_physics, phi, rhs, D(:,:,1:1) )
  
     rho = rhs(:,:,1,rhoF)
     u   = rhs(:,:,1,UxF)
@@ -122,9 +127,6 @@ subroutine RHS_2D_CANTERA_navier_stokes_reactive_periodicBC(params_physics, Bs, 
     do n = 1, params_physics%species
         Y(:,:,n) = rhs(:,:,1,YF+n-1)
     end do
-
-    ! compute 1/rho for better performance
-    phi1_inv(:,:)  = 1.0_rk / phi(:,:,1,rhoF)
 
     ! discretization constant
     dx = delta_x(1)

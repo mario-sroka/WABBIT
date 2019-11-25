@@ -77,6 +77,9 @@ subroutine RHS_3D_CANTERA_navier_stokes_reactive_non_periodicBC(params_physics, 
     ! loop variables
     integer(kind=ik)                                        :: i, j, k, n
 
+    ! array indexes
+    integer(kind=ik)                                        :: gp, gm, Bp(3), Bm(3)
+
     ! chemistry parameter
     ! reaction heat
     real(kind=rk)                                           :: dh(params_physics%species)
@@ -95,6 +98,12 @@ subroutine RHS_3D_CANTERA_navier_stokes_reactive_non_periodicBC(params_physics, 
 
 !---------------------------------------------------------------------------------------------
 ! variables initialization
+
+    ! compute array indexes
+    gp   = g+1
+    gm   = g-1
+    Bp   = Bs(:) + g
+    Bm   = Bs(:) + g + 2
 
     ! set one sided boundary
     ! note: boundaries are set blockwise, so we need to calculate this here for every RHS call!
@@ -117,9 +126,12 @@ subroutine RHS_3D_CANTERA_navier_stokes_reactive_non_periodicBC(params_physics, 
     ! set physics parameters for readability
     dissipation = params_physics%dissipation
 
+    ! compute 1/rho for better performance
+    phi1_inv(:,:,:)  = 1.0_rk / phi(:,:,:,rhoF)
+
     ! primitive variables
     ! use rhs as dummy fields
-    call convert_to_primitive( params_physics, phi, rhs )
+    call convert_to_primitive( params_physics, phi, rhs, phi1_inv )
  
     rho = rhs(:,:,:,rhoF)
     u   = rhs(:,:,:,UxF)
@@ -129,9 +141,6 @@ subroutine RHS_3D_CANTERA_navier_stokes_reactive_non_periodicBC(params_physics, 
     do n = 1, params_physics%species
         Y(:,:,:,n) = rhs(:,:,:,YF+n-1)
     end do
-
-    ! compute 1/rho for better performance
-    phi1_inv(:,:,:)  = 1.0_rk / phi(:,:,:,rhoF)
 
     ! discretization constant
     dx = delta_x(1)

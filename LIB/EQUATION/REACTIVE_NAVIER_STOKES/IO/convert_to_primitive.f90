@@ -19,7 +19,7 @@
 !
 ! ********************************************************************************************
 
-subroutine convert_to_primitive( params_physics, phi, phi_work )
+subroutine convert_to_primitive( params_physics, phi, phi_work, phi1_inv )
 
 !---------------------------------------------------------------------------------------------
 ! variables
@@ -31,6 +31,9 @@ subroutine convert_to_primitive( params_physics, phi, phi_work )
 
     !> state vector for one block, work array
     real(kind=rk), intent(inout)            :: phi(:, :, :, :), phi_work(:, :, :, :)
+
+    !> 1/sqrt(rho) -> increase performance
+    real(kind=rk), intent(in)               :: phi1_inv(:, :, :)
 
     ! field indexes
     integer(kind=ik)                        :: rhoF, UxF, UyF, UzF, EF, YF
@@ -54,21 +57,21 @@ subroutine convert_to_primitive( params_physics, phi, phi_work )
 
     ! rho
     !-----------------------------------------------------------------------------------------
-    phi_work(:, :, :, rhoF) = phi(:,:,:,rhoF)**2.0_rk
+    phi_work(:, :, :, rhoF) = phi(:,:,:,rhoF) * phi(:,:,:,rhoF)
 
     ! Ux
     !-----------------------------------------------------------------------------------------
-    phi_work(:, :, :, UxF)  = phi(:,:,:,UxF) / phi(:,:,:,rhoF)
+    phi_work(:, :, :, UxF)  = phi(:,:,:,UxF) * phi1_inv(:, :, :)
 
     ! Uy
     !-----------------------------------------------------------------------------------------
-    phi_work(:, :, :, UyF)  = phi(:,:,:,UyF) / phi(:,:,:,rhoF) 
+    phi_work(:, :, :, UyF)  = phi(:,:,:,UyF) * phi1_inv(:, :, :) 
 
     ! Uz
     !-----------------------------------------------------------------------------------------
     ! 3D?
     if ( params_physics%d == 3 ) then
-        phi_work(:, :, :, UzF) = phi(:,:,:,UzF) / phi(:,:,:,rhoF)
+        phi_work(:, :, :, UzF) = phi(:,:,:,UzF) * phi1_inv(:, :, :)
     end if
 
     ! energy field

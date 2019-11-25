@@ -20,7 +20,7 @@
 !
 ! ********************************************************************************************
 
-subroutine RHS_3D_navier_stokes_non_reactive_periodicBC(params_physics, Bs, g, NdF, x0, delta_x, phi, rhs, time)
+subroutine RHS_3D_navier_stokes_non_reactive_periodicBC(params_physics, Ds, Bs, g, NdF, x0, delta_x, phi, rhs, time)
 
 !---------------------------------------------------------------------------------------------
 ! modules
@@ -35,13 +35,13 @@ subroutine RHS_3D_navier_stokes_non_reactive_periodicBC(params_physics, Bs, g, N
     !> navier stokes params struct, note: contails all parameters needed by RHS
     type(type_params_rns), intent(inout)                    :: params_physics
     !> grid parameter
-    integer(kind=ik), intent(inout)                         :: g, Bs(3), NdF
+    integer(kind=ik), intent(inout)                         :: g, Bs(3), NdF, Ds(3)
     !> rhs parameter
     real(kind=rk), dimension(3), intent(in)                 :: x0, delta_x
     !> datafields
-    real(kind=rk), intent(inout)                            :: phi(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g, NdF)
+    real(kind=rk), intent(inout)                            :: phi(Ds(1), Ds(2), Ds(3), NdF)
     ! rhs array
-    real(kind=rk),intent(inout)                             :: rhs(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g, NdF)
+    real(kind=rk),intent(inout)                             :: rhs(Ds(1), Ds(2), Ds(3), NdF)
     ! it may happen that some source terms have an explicit time-dependency
     ! therefore the general call has to pass time
     real(kind=rk), intent (in)                              :: time
@@ -66,21 +66,16 @@ subroutine RHS_3D_navier_stokes_non_reactive_periodicBC(params_physics, Bs, g, N
     logical                                                 :: dissipation
 
     ! variables
-    real(kind=rk)                                           :: rho(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), u(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), &
-                                                               v(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), w(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), &
-                                                               p(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), T(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), &
-                                                               tau11(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), tau22(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), &
-                                                               tau33(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), tau12(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), &
-                                                               tau13(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), tau23(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), &
-                                                               mu(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), lambda(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
+    real(kind=rk), allocatable, save                        :: rho(:,:,:), u(:,:,:), v(:,:,:), w(:,:,:), p(:,:,:), T(:,:,:), &
+                                                               tau11(:,:,:), tau22(:,:,:), tau33(:,:,:), tau12(:,:,:), &
+                                                               tau13(:,:,:), tau23(:,:,:), mu(:,:,:), lambda(:,:,:)
 
     ! dummy field
-    real(kind=rk)                                           :: dummy(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), dummy2(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), &
-                                                               dummy3(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), dummy4(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), &
-                                                               dummy5(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), dummy6(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
+    real(kind=rk), allocatable, save                        :: dummy(:,:,:), dummy2(:,:,:), dummy3(:,:,:), dummy4(:,:,:), &
+                                                               dummy5(:,:,:), dummy6(:,:,:)
 
     ! inverse sqrt(rho) field 
-    real(kind=rk)                                           :: phi1_inv(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
+    real(kind=rk), allocatable, save                        :: phi1_inv(:,:,:)
 
     ! field indexes
     integer(kind=ik)                                        :: rhoF, UxF, UyF, UzF, EF
@@ -88,14 +83,38 @@ subroutine RHS_3D_navier_stokes_non_reactive_periodicBC(params_physics, Bs, g, N
     ! loop variables
     integer(kind=ik)                                        :: i, j, k
 
+    ! array indexes
+    integer(kind=ik)                                        :: gp, gm, Bp(3), Bm(3)
+
     ! switch to enabled one sided derivatives
     logical                                                 :: onesided(2,3)
 
 !---------------------------------------------------------------------------------------------
 ! interfaces
 
+! REMOVE
+mu_d = 0.0_rk
+
 !---------------------------------------------------------------------------------------------
 ! variables initialization
+
+    ! compute array indexes
+    gp   = g+1
+    gm   = g-1
+    Bp   = Bs(:) + g
+    Bm   = Bs(:) + g + 2
+
+    ! allocate dummy fields
+    if ( .not. allocated(dummy) ) allocate( dummy(Ds(1), Ds(2), Ds(3)), dummy2(Ds(1), Ds(2), Ds(3)), &
+                                            dummy3(Ds(1), Ds(2), Ds(3)), dummy4(Ds(1), Ds(2), Ds(3)), &
+                                            dummy5(Ds(1), Ds(2), Ds(3)), dummy6(Ds(1), Ds(2), Ds(3)), &
+                                            phi1_inv(Ds(1), Ds(2), Ds(3)), rho(Ds(1), Ds(2), Ds(3)), &
+                                            u(Ds(1), Ds(2),Ds(3)), v(Ds(1), Ds(2),Ds(3)), w(Ds(1), Ds(2), Ds(3)), &
+                                            p(Ds(1), Ds(2),Ds(3)), T(Ds(1), Ds(2), Ds(3)), &
+                                            tau11(Ds(1),Ds(2), Ds(3)), tau22(Ds(1), Ds(2), Ds(3)), &
+                                            tau33(Ds(1),Ds(2), Ds(3)), tau12(Ds(1), Ds(2), Ds(3)), &
+                                            tau13(Ds(1),Ds(2), Ds(3)), tau23(Ds(1), Ds(2), Ds(3)), &
+                                            mu(Ds(1), Ds(2),Ds(3)), lambda(Ds(1), Ds(2), Ds(3)) )
 
     ! periodic boundary here, so:
     onesided = .false.
@@ -121,28 +140,23 @@ subroutine RHS_3D_navier_stokes_non_reactive_periodicBC(params_physics, Bs, g, N
     dissipation = params_physics%dissipation
     T0          = params_physics%T0
 
+    ! compute 1/rho for better performance
+    phi1_inv(:,:,:)  = 1.0_rk / phi(:,:,:,rhoF)
+
     ! primitive variables
     ! use rhs as dummy fields
-    call convert_to_primitive( params_physics, phi, rhs )
+    call convert_to_primitive( params_physics, phi, rhs, phi1_inv )
  
     rho = rhs(:,:,:,rhoF)
     u   = rhs(:,:,:,UxF)
     v   = rhs(:,:,:,UyF)
     w   = rhs(:,:,:,UzF)
-    p   = rhs(:,:,:,EF)
-
-    ! compute 1/rho for better performance
-    phi1_inv(:,:,:)  = 1.0_rk / phi(:,:,:,rhoF)
+    p   = rhs(:,:,:,EF)  
 
     ! Compute mu and T
     if (dissipation) then
-        do k = 1, Bs(3)+2*g
-            do j = 1, Bs(2)+2*g
-                do i = 1, Bs(1)+2*g
-                    T(i,j,k) = p(i,j,k) * phi1_inv(i,j,k) * phi1_inv(i,j,k) * Rs
-                end do
-            end do
-        end do
+
+        T(:, :, :) = p(:, :, :) * phi1_inv(:, :, :) * phi1_inv(:, :, :) * Rs
 
         ! viscosity
         select case(params_physics%viscosity_model)
@@ -163,10 +177,11 @@ subroutine RHS_3D_navier_stokes_non_reactive_periodicBC(params_physics, Bs, g, N
 
         end select
 
-        mu_d = 0.0_rk
+        ! mu_d - 2/3 mu, mu_d = 0
+        dummy6(gm:Bm(1), gm:Bm(2), gm:Bm(3)) = - two_three * mu(gm:Bm(1), gm:Bm(2), gm:Bm(3))
 
         ! thermal conductivity
-        lambda= Cp * mu/Pr
+        lambda(gm:Bm(1), gm:Bm(2), gm:Bm(3)) = Cp * mu(gm:Bm(1), gm:Bm(2), gm:Bm(3)) / Pr
     
     end if
 
@@ -184,26 +199,20 @@ subroutine RHS_3D_navier_stokes_non_reactive_periodicBC(params_physics, Bs, g, N
 
     !#########################################################################################
     ! RHS of energy equation:  p_t = -gamma*div(U_tilde p) + gamm1 *U x grad(p)
-    do k = g-1, Bs(3)+g+2
-        do j = g-1, Bs(2)+g+2
-            do i = g-1, Bs(1)+g+2
-                dummy(i,j,k)  = u(i,j,k)*p(i,j,k)
-                dummy2(i,j,k) = v(i,j,k)*p(i,j,k)
-                dummy3(i,j,k) = w(i,j,k)*p(i,j,k)
-            end do
-        end do
-    end do
-    call diff_wrapper_3D( Bs, g, dummy,  'periodic_u_x', onesided, dx=dx, dudx=dummy4)
-    call diff_wrapper_3D( Bs, g, dummy2, 'periodic_u_y', onesided, dy=dy, dudy=dummy5)
-    call diff_wrapper_3D( Bs, g, dummy3, 'periodic_u_z', onesided, dz=dz, dudz=dummy6)
+    dummy( gm:Bm(1), gm:Bm(2), gm:Bm(3)) = u(gm:Bm(1), gm:Bm(2), gm:Bm(3)) * p(gm:Bm(1), gm:Bm(2), gm:Bm(3))
+    dummy2(gm:Bm(1), gm:Bm(2), gm:Bm(3)) = v(gm:Bm(1), gm:Bm(2), gm:Bm(3)) * p(gm:Bm(1), gm:Bm(2), gm:Bm(3))
+    dummy3(gm:Bm(1), gm:Bm(2), gm:Bm(3)) = w(gm:Bm(1), gm:Bm(2), gm:Bm(3)) * p(gm:Bm(1), gm:Bm(2), gm:Bm(3))
 
-    do k = g+1, Bs(3)+g
-        do j = g+1, Bs(2)+g
-            do i = g+1, Bs(1)+g
-                rhs(i,j,k,EF) = ( gamma_ - 1.0_rk ) * rhs(i,j,k,EF) - gamma_ * ( dummy4(i,j,k) + dummy5(i,j,k) + dummy6(i,j,k) )
-            end do
-        end do 
-    end do 
+    call diff_wrapper_3D( Bs, g, dummy,  'diff_x_c_gp', onesided, dx=dx, dudx=dummy4)
+    call diff_wrapper_3D( Bs, g, dummy2, 'diff_y_c_gp', onesided, dy=dy, dudy=dummy5)
+    call diff_wrapper_3D( Bs, g, dummy3, 'diff_z_c_gp', onesided, dz=dz, dudz=dummy6)
+
+    dummy4(gp:Bp(1), gp:Bp(2), gp:Bp(3)) = dummy4( gp:Bp(1), gp:Bp(2), gp:Bp(3)) &
+                                         + dummy5( gp:Bp(1), gp:Bp(2), gp:Bp(3)) &
+                                         + dummy6( gp:Bp(1), gp:Bp(2), gp:Bp(3))
+
+    rhs(gp:Bp(1), gp:Bp(2), gp:Bp(3), EF) = rhs(gp:Bp(1), gp:Bp(2), gp:Bp(3), EF) * ( gamma_ - 1.0_rk ) &
+                                          - dummy4(gp:Bp(1), gp:Bp(2), gp:Bp(3)) * gamma_
 
     !#########################################################################################
     ! forcing

@@ -77,7 +77,7 @@ subroutine prepare_saved_data_reactive_ns( params_physics, phi, phi_work, time, 
     if (params_physics%save_primitive) then
 
         ! convert from skew symmetric form
-        call convert_to_primitive(params_physics, phi, phi_work(:, :, :, 1:params_physics%NdF) )
+        call convert_to_primitive(params_physics, phi, phi_work(:, :, :, 1:params_physics%NdF), 1.0_rk/phi(:,:,:,rhoF) )
 
     else
         ! nothing to do

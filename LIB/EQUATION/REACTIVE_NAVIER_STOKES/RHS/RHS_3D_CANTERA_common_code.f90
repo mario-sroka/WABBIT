@@ -18,63 +18,108 @@
     ! Compute Rs, W, X, D
     if (dissipation) then
 
-        do k = 1, Bs(3)+2*g
-            do j = 1, Bs(2)+2*g
-                do i = 1, Bs(1)+2*g
-
-                    ! mean molecular weight
-                    Wk = 0.0_rk
-                    do n = 1, params_physics%species
-                        Wk = Wk + Wk_species_inv(n) * Y(i,j,k,n)
-                    end do
-                    ! note: W is actually 1/W !!
-                    Wk_inv = 1.0_rk / Wk
-                    ! gas constant
-                    Rs = Wk * params_physics%gas_constant
-
-                    ! mole fraction
-                    do n = 1, params_physics%species
-                        X(i,j,k,n)         = Wk_inv * Wk_species_inv(n) * Y(i,j,k,n)
-                    end do
-
-                    ! diffusion coefficient
-                    do n = 1, params_physics%species
-                        D(i,j,k,n) = params_physics%Wk(n) * Wk
-                    end do
-
-                end do
-            end do
+        ! use X as dummy
+        do n = 1, params_physics%species
+            X(:,:,:,n) = Wk_species_inv(n) * Y(:,:,:,n)
         end do
 
-        mu_d = 0.0_rk
+        ! compute W
+        dummy(:,:,:) = X(:,:,:,1)
+        do n = 2, params_physics%species
+            dummy(:,:,:) = dummy(:,:,:) + X(:,:,:,n)
+        end do
+
+        ! compute X
+        do n = 1, params_physics%species
+            X(:,:,:,n) = X(:,:,:,n) / dummy(:,:,:)
+        end do
+
+        ! compute D
+        do n = 1, params_physics%species
+            D(:,:,:,n) = params_physics%Wk(n) * dummy(:,:,:)
+        end do
 
     end if    
 
     !#########################################################################################
-    ! CANTERA calls
-    ! - principle: set thermodynamic state for each node, compute all necessary values with cantera
-    ! note: if-condition inside loop, should ensure the minimal number of cantera calls 
-    do k = 1, Bs(3)+2*g
-        do j = 1, Bs(2)+g+g
-            do i = 1, Bs(1)+g+g
+    ! dummy energy for set state calls
+    dummy(:,:,:) = es(:,:,:)
+    do n = 1, params_physics%species
+        dummy(:,:,:) = dummy(:,:,:) + dh(n) * Y(:,:,:, n)
+    end do
 
-                if ( (k<g-1) .or. (j<g-1) .or. (i<g-1) .or. (k>Bs(3)+g+2) .or. (j>Bs(2)+g+2) .or. (i>Bs(1)+g+2) ) then
+    !#########################################################################################
+    ! compute thermodynamics for outer ghost nodes
+    do k = 1, Ds(3)
+        do j = 1, Ds(2)
+
+            do index3 = 1, 4
+                i = outer_bound(index3, 1)
 
                     ! setState call depends on choosen mechanism
                     ! OHN
                     call setMoleFractions(gas, X(i,j,k,:))
-                    call setState_UV(gas, es(i,j,k) + sum( dh(:) * Y(i,j,k,:) ), phi1_inv(i,j,k)*phi1_inv(i,j,k)  )
+                    call setState_UV(gas, dummy(i,j,k), phi1_inv(i,j,k)*phi1_inv(i,j,k)  )
 
                     ! temperature and pressure
                     T(i,j,k) = temperature(gas)
                     p(i,j,k) = pressure(gas)
+  
+            end do
+        end do
+    end do
 
-                elseif ( (k<g+1) .or. (j<g+1) .or. (i<g+1) .or. (k>Bs(3)+g) .or. (j>Bs(2)+g) .or. (i>Bs(1)+g) ) then
+    do k = 1, Ds(3)
+
+        do index2 = 1, 4
+            j = outer_bound(index2, 2)
+
+            do i = gm, Bm(1)
 
                     ! setState call depends on choosen mechanism
                     ! OHN
                     call setMoleFractions(gas, X(i,j,k,:))
-                    call setState_UV(gas, es(i,j,k) + sum( dh(:) * Y(i,j,k,:) ), phi1_inv(i,j,k)*phi1_inv(i,j,k)  )
+                    call setState_UV(gas, dummy(i,j,k), phi1_inv(i,j,k)*phi1_inv(i,j,k)  )
+
+                    ! temperature and pressure
+                    T(i,j,k) = temperature(gas)
+                    p(i,j,k) = pressure(gas)
+  
+            end do
+        end do
+    end do
+
+    do index1 = 1, 4
+        k = outer_bound(index1, 3)
+
+        do j = gm, Bm(2)
+            do i = gm, Bm(1)
+
+                    ! setState call depends on choosen mechanism
+                    ! OHN
+                    call setMoleFractions(gas, X(i,j,k,:))
+                    call setState_UV(gas, dummy(i,j,k), phi1_inv(i,j,k)*phi1_inv(i,j,k)  )
+
+                    ! temperature and pressure
+                    T(i,j,k) = temperature(gas)
+                    p(i,j,k) = pressure(gas)
+  
+            end do
+        end do
+    end do
+
+    !#########################################################################################
+    ! compute thermodynamics for inner ghost nodes
+    do k = gm, Bm(3)
+        do j = gm, Bm(2)
+
+            do index3 = 1, 4
+                i = inner_bound(index3, 1)
+
+                    ! setState call depends on choosen mechanism
+                    ! OHN
+                    call setMoleFractions(gas, X(i,j,k,:))
+                    call setState_UV(gas, dummy(i,j,k), phi1_inv(i,j,k)*phi1_inv(i,j,k)  )
 
                     ! temperature and pressure
                     T(i,j,k) = temperature(gas)
@@ -92,13 +137,86 @@
                     do n = 1, params_physics%species
                         D(i,j,k,n) = D(i,j,k,n)  * q(n) 
                     end do
+  
+            end do
+        end do
+    end do
 
-                else
+    do k = gm, Bm(3)
+
+        do index2 = 1, 4
+            j = inner_bound(index2, 2)
+
+            do i = gp, Bp(1)
 
                     ! setState call depends on choosen mechanism
                     ! OHN
                     call setMoleFractions(gas, X(i,j,k,:))
-                    call setState_UV(gas, es(i,j,k) + sum( dh(:) * Y(i,j,k,:) ), phi1_inv(i,j,k)*phi1_inv(i,j,k)  )
+                    call setState_UV(gas, dummy(i,j,k), phi1_inv(i,j,k)*phi1_inv(i,j,k)  )
+
+                    ! temperature and pressure
+                    T(i,j,k) = temperature(gas)
+                    p(i,j,k) = pressure(gas)
+
+                    ! viscosity
+                    mu(i,j,k) = viscosity(gas)
+
+                    ! thermal conductivity
+                    lambda(i,j,k) = thermalConductivity(gas)    
+                
+                    ! diffusion
+                    call getMixDiffCoeffs(gas, q)
+
+                    do n = 1, params_physics%species
+                        D(i,j,k,n) = D(i,j,k,n)  * q(n) 
+                    end do
+  
+            end do
+        end do
+    end do
+
+    do index1 = 1, 4
+        k = inner_bound(index1, 3)
+
+        do j = gp, Bp(2)
+            do i = gp, Bp(1)
+
+                    ! setState call depends on choosen mechanism
+                    ! OHN
+                    call setMoleFractions(gas, X(i,j,k,:))
+                    call setState_UV(gas, dummy(i,j,k), phi1_inv(i,j,k)*phi1_inv(i,j,k)  )
+
+                    ! temperature and pressure
+                    T(i,j,k) = temperature(gas)
+                    p(i,j,k) = pressure(gas)
+
+                    ! viscosity
+                    mu(i,j,k) = viscosity(gas)
+
+                    ! thermal conductivity
+                    lambda(i,j,k) = thermalConductivity(gas)    
+                
+                    ! diffusion
+                    call getMixDiffCoeffs(gas, q)
+
+                    do n = 1, params_physics%species
+                        D(i,j,k,n) = D(i,j,k,n)  * q(n) 
+                    end do
+  
+            end do
+        end do
+    end do
+
+    !#########################################################################################
+    ! compute thermodynamics for inner block nodes
+    do k = gp, Bp(3)
+        do j = gp, Bp(2)
+            do i = gp, Bp(1)
+
+                    ! setState call depends on choosen mechanism
+                    ! OHN
+                    call setMoleFractions(gas, X(i,j,k,:))
+                    call setState_UV(gas, dummy(i,j,k), phi1_inv(i,j,k)*phi1_inv(i,j,k)  )
 
                     ! temperature and pressure
                     T(i,j,k) = temperature(gas)
@@ -124,11 +242,21 @@
                     do n = 1, params_physics%species
                         rhs(i,j,k,YF+n-1) = q(n) * params_physics%Wk(n)
                     end do
-
-                    rhs(i,j,k,EF) = - sum( dh(:) * rhs(i,j,k,YF:YF+params_physics%species-1) )
-
-                end if
     
             end do
         end do
     end do
+
+
+    !#########################################################################################
+    ! insert reaction rate in energy equation
+    rhs(gp:Bp(1), gp:Bp(2), gp:Bp(3), EF) = - dh(1) * rhs(gp:Bp(1), gp:Bp(2), gp:Bp(3), YF)
+    do n = 2, params_physics%species
+       rhs(gp:Bp(1), gp:Bp(2), gp:Bp(3), EF) = rhs(gp:Bp(1), gp:Bp(2), gp:Bp(3), EF) &
+                                             - dh(n) * rhs(gp:Bp(1), gp:Bp(2), gp:Bp(3), YF+n-1)
+    end do
+
+    !#########################################################################################
+    ! viscosity dummy field
+    ! mu_d - 2/3 mu, mu_d = 0
+    dummy6(gm:Bm(1), gm:Bm(2), gm:Bm(3)) = - two_three * mu(gm:Bm(1), gm:Bm(2), gm:Bm(3))

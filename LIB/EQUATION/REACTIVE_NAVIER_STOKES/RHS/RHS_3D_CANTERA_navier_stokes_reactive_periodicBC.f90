@@ -20,7 +20,7 @@
 !
 ! ********************************************************************************************
 
-subroutine RHS_3D_CANTERA_navier_stokes_reactive_periodicBC(params_physics, Bs, g, NdF, x0, delta_x, phi, rhs, gas)
+subroutine RHS_3D_CANTERA_navier_stokes_reactive_periodicBC(params_physics, Ds, Bs, g, NdF, x0, delta_x, phi, rhs, gas)
 
 !---------------------------------------------------------------------------------------------
 ! modules
@@ -35,13 +35,13 @@ subroutine RHS_3D_CANTERA_navier_stokes_reactive_periodicBC(params_physics, Bs, 
     !> navier stokes params struct, note: contails all parameters needed by RHS
     type(type_params_rns), intent(inout)                    :: params_physics
     !> grid parameter
-    integer(kind=ik), intent(inout)                         :: g, Bs(3), NdF
+    integer(kind=ik), intent(inout)                         :: g, Bs(3), NdF, Ds(3)
     !> rhs parameter
     real(kind=rk), dimension(3), intent(in)                 :: x0, delta_x
     !> datafields
-    real(kind=rk), intent(inout)                            :: phi(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g, NdF)
+    real(kind=rk), intent(inout)                            :: phi(Ds(1), Ds(2), Ds(3), NdF)
     ! rhs array
-    real(kind=rk),intent(inout)                             :: rhs(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g, NdF)
+    real(kind=rk),intent(inout)                             :: rhs(Ds(1), Ds(2), Ds(3), NdF)
     !> Cantera gas mixture struct
     type(phase_t), intent(inout)                            :: gas
 
@@ -56,23 +56,17 @@ subroutine RHS_3D_CANTERA_navier_stokes_reactive_periodicBC(params_physics, Bs, 
     logical                                                 :: dissipation
 
     ! variables
-    real(kind=rk)                                           :: rho(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), u(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), v(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), &
-                                                               w(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), p(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), T(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), &
-                                                               tau11(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), tau22(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), tau33(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), &
-                                                               tau12(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), tau13(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), tau23(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), &
-                                                               mu(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), lambda(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), &
-                                                               es(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), Y(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g, params_physics%species), &
-                                                               X(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g, params_physics%species), &
-                                                               D(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g, params_physics%species)
+    real(kind=rk), allocatable, save                        :: rho(:,:,:), u(:,:,:), v(:,:,:), w(:,:,:), p(:,:,:), T(:,:,:), &
+                                                               tau11(:,:,:), tau22(:,:,:), tau33(:,:,:), tau12(:,:,:), &
+                                                               tau13(:,:,:), tau23(:,:,:), mu(:,:,:), lambda(:,:,:), &
+                                                               es(:,:,:), Y(:,:,:,:), X(:,:,:,:), D(:,:,:,:)
 
     ! dummy field
-    real(kind=rk)                                           :: dummy(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), dummy2(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), dummy3(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), &
-                                                               dummy4(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), dummy5(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), dummy6(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g), &
-                                                               q(params_physics%species)
-
+    real(kind=rk), allocatable, save                        :: dummy(:,:,:), dummy2(:,:,:), dummy3(:,:,:), dummy4(:,:,:), &
+                                                               dummy5(:,:,:), dummy6(:,:,:), q(:)
 
     ! inverse sqrt(rho) field 
-    real(kind=rk)                                           :: phi1_inv(Bs(1)+2*g, Bs(2)+2*g, Bs(3)+2*g)
+    real(kind=rk), allocatable, save                        :: phi1_inv(:,:,:)
 
     ! loop variables
     integer(kind=ik)                                        :: i, j, k, n
@@ -90,6 +84,11 @@ subroutine RHS_3D_CANTERA_navier_stokes_reactive_periodicBC(params_physics, Bs, 
     ! switch to enabled one sided derivatives
     logical                                                 :: onesided(2,3)
 
+    ! index arrays to speed up CANTERA calls
+    integer(kind=ik)                                        :: outer_bound(4, 3)
+    integer(kind=ik)                                        :: inner_bound(4, 3)
+    integer(kind=ik)                                        :: index1, index2, index3
+
 !---------------------------------------------------------------------------------------------
 ! interfaces
 
@@ -101,6 +100,28 @@ subroutine RHS_3D_CANTERA_navier_stokes_reactive_periodicBC(params_physics, Bs, 
     gm   = g-1
     Bp   = Bs(:) + g
     Bm   = Bs(:) + g + 2
+
+    outer_bound(:,1) = (/ 1, 2, Bs(1)+2*g-1, Bs(1)+2*g /)
+    outer_bound(:,2) = (/ 1, 2, Bs(2)+2*g-1, Bs(2)+2*g /)
+    outer_bound(:,3) = (/ 1, 2, Bs(3)+2*g-1, Bs(3)+2*g /)
+
+    inner_bound(:,1) = (/ 3, 4, Bs(1)+2*g-3, Bs(1)+2*g-2 /)
+    inner_bound(:,2) = (/ 3, 4, Bs(2)+2*g-3, Bs(2)+2*g-2 /)
+    inner_bound(:,3) = (/ 3, 4, Bs(3)+2*g-3, Bs(3)+2*g-2 /)
+
+    ! allocate dummy fields
+    if ( .not. allocated(dummy) ) allocate( dummy(Ds(1), Ds(2), Ds(3)), dummy2(Ds(1), Ds(2), Ds(3)), &
+                                            dummy3(Ds(1), Ds(2), Ds(3)), dummy4(Ds(1), Ds(2), Ds(3)), &
+                                            dummy5(Ds(1), Ds(2), Ds(3)), dummy6(Ds(1), Ds(2), Ds(3)), q(params_physics%species), &
+                                            phi1_inv(Ds(1), Ds(2), Ds(3)), rho(Ds(1), Ds(2), Ds(3)), &
+                                            u(Ds(1), Ds(2),Ds(3)), v(Ds(1), Ds(2),Ds(3)), w(Ds(1), Ds(2), Ds(3)), &
+                                            p(Ds(1), Ds(2),Ds(3)), T(Ds(1), Ds(2), Ds(3)), &
+                                            tau11(Ds(1),Ds(2), Ds(3)), tau22(Ds(1), Ds(2), Ds(3)), &
+                                            tau33(Ds(1),Ds(2), Ds(3)), tau12(Ds(1), Ds(2), Ds(3)), &
+                                            tau13(Ds(1),Ds(2), Ds(3)), tau23(Ds(1), Ds(2), Ds(3)), &
+                                            mu(Ds(1), Ds(2),Ds(3)), lambda(Ds(1), Ds(2), Ds(3)), &
+                                            es(Ds(1), Ds(2),Ds(3)), Y(Ds(1), Ds(2), Ds(3), params_physics%species), &
+                                            X(Ds(1), Ds(2), Ds(3), params_physics%species), D(Ds(1), Ds(2), Ds(3), params_physics%species) )
 
     ! periodic boundary here, so:
     onesided = .false.

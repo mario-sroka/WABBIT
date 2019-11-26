@@ -117,11 +117,11 @@ subroutine RHS_wrapper_reactive_ns( params_physics, time, phi, phi_work, x0, dx,
 
                      if (periodic) then
                          ! periodic RHS
-                         call RHS_3D_CANTERA_navier_stokes_reactive_periodicBC( params_physics, Bs, &
+                         call RHS_3D_CANTERA_navier_stokes_reactive_periodicBC( params_physics, Ds, Bs, &
                          g, NdF, x0, dx, phi(:,:,:,:), rhs(:,:,:,:), gas )
                      else
                          ! non-periodic RHS
-                         call RHS_3D_CANTERA_navier_stokes_reactive_non_periodicBC( params_physics, Bs, &
+                         call RHS_3D_CANTERA_navier_stokes_reactive_non_periodicBC( params_physics, Ds, Bs, &
                          g, NdF, x0, dx, phi(:,:,:,:), rhs(:,:,:,:), gas )
                      end if
                 

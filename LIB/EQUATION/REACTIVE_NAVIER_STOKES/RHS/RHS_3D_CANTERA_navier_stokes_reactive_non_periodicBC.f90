@@ -20,7 +20,7 @@
 !
 ! ********************************************************************************************
 
-subroutine RHS_3D_CANTERA_navier_stokes_reactive_non_periodicBC(params_physics, Bs, g, NdF, x0, delta_x, phi, rhs, gas)
+subroutine RHS_3D_CANTERA_navier_stokes_reactive_non_periodicBC(params_physics, Ds, Bs, g, NdF, x0, delta_x, phi, rhs, gas)
 
 !---------------------------------------------------------------------------------------------
 ! modules
@@ -35,7 +35,7 @@ subroutine RHS_3D_CANTERA_navier_stokes_reactive_non_periodicBC(params_physics, 
     !> navier stokes params struct, note: contails all parameters needed by RHS
     type(type_params_rns), intent(inout)                    :: params_physics
     !> grid parameter
-    integer(kind=ik), intent(inout)                         :: g, Bs(3), NdF
+    integer(kind=ik), intent(inout)                         :: g, Bs(3), NdF, Ds(3)
     !> rhs parameter
     real(kind=rk), dimension(3), intent(in)                 :: x0, delta_x
     !> datafields
@@ -92,6 +92,11 @@ subroutine RHS_3D_CANTERA_navier_stokes_reactive_non_periodicBC(params_physics, 
 
     ! reference side for sponge computation
     integer(kind=ik)                                        :: ref_side
+
+    ! index arrays to speed up CANTERA calls
+    integer(kind=ik)                                        :: outer_bound(4, 3)
+    integer(kind=ik)                                        :: inner_bound(4, 3)
+    integer(kind=ik)                                        :: index1, index2, index3
 
 !---------------------------------------------------------------------------------------------
 ! interfaces

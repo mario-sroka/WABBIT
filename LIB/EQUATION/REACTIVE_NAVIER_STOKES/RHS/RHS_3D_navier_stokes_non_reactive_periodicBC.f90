@@ -57,7 +57,7 @@ subroutine RHS_3D_navier_stokes_non_reactive_periodicBC(params_physics, Ds, Bs, 
     ! prandtl number
     real(kind=rk)                                           :: Pr
     ! dynamic viscosity
-    real(kind=rk)                                           :: mu0, mu_d, T0, two_three
+    real(kind=rk)                                           :: mu0, T0, two_three
 
     ! spacing
     real(kind=rk)                                           :: dx, dy, dz
@@ -91,9 +91,6 @@ subroutine RHS_3D_navier_stokes_non_reactive_periodicBC(params_physics, Ds, Bs, 
 
 !---------------------------------------------------------------------------------------------
 ! interfaces
-
-! REMOVE
-mu_d = 0.0_rk
 
 !---------------------------------------------------------------------------------------------
 ! variables initialization

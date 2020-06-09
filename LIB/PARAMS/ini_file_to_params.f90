@@ -65,6 +65,13 @@ subroutine ini_file_to_params( params, filename )
     call set_lattice_spacing_mpi(1.0d0)
     call read_ini_file_mpi(FILE, filename, .true.)
 
+    if (params%rank==0) then
+        write(*,*)
+        write(*,*)
+        write(*,*) "PARAMS: Physics"
+        write(*,'(" --------------")')
+      endif
+
     ! which physics module is used? (note that the initialization of different parameters takes
     ! place in those modules, i.e., they are not read here.)
     call read_param_mpi(FILE, 'Physics', 'physics_type', params%physics_type, "---" )
@@ -73,13 +80,15 @@ subroutine ini_file_to_params( params, filename )
     call ini_blocks(params,FILE)
     call ini_time(params,FILE)
 
+    if (params%rank==0) then
+        write(*,*)
+        write(*,*)
+        write(*,*) "PARAMS: ..."
+        write(*,'(" --------------")')
+      endif
 
     !**************************************************************************
     ! read INITIAL CONDITION parameters
-
-    ! which physics module is used? (note that the initialization of different parameters takes
-    ! place in those modules, i.e., they are not read here.)
-    call read_param_mpi(FILE, 'Physics', 'physics_type', params%physics_type, "---" )
 
     ! if the initial condition is read from file, it is handled by wabbit itself, i.e. not
     ! by the physics modules. the pyhsics modules cannot do this, because they just see 'blocks'
@@ -353,6 +362,11 @@ end subroutine ini_file_to_params
     ! number of maximal components for ghost nodes synchronizing
     ! note: do not change default value!
     call read_param_mpi(FILE, 'Blocks', 'N_max_components', params%N_max_components, 6 )
+    ! /todo: can not change this values from inside physics module
+    ! -> HACK it here
+    if ( params%physics_type == 'reactive_navier_stokes' ) then
+        params%N_max_components = params%n_eqn
+    end if
 
   end subroutine ini_blocks
 

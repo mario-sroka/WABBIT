@@ -161,7 +161,7 @@ subroutine read_parameter_combustion( params_physics, filename, gas )
     call read_param_mpi(FILE, 'Combustion', 'sponge_strength', params_physics%sponge_strength, 0.0_rk )
 
     ! sponge reference values
-    dummy2 = 0.0_rk
+    dummy2 = -99.0_rk
     call read_param_mpi(FILE, 'Combustion', 'rho_ref', params_physics%rho_ref, dummy2 )
     call read_param_mpi(FILE, 'Combustion', 'u_ref', params_physics%u_ref, dummy2 )
     call read_param_mpi(FILE, 'Combustion', 'v_ref', params_physics%v_ref, dummy2 )

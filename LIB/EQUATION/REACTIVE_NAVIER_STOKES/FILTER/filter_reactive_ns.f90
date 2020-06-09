@@ -56,6 +56,10 @@ subroutine filter_reactive_ns( params_physics, phi, phi_work, x0, dx, stage, fil
         case('spectral')
             call spectral_filter( params_physics, phi, phi_work, x0, dx, stage )
 
+        case('bogey_shock')
+            ! no init or post stage
+            if ( stage=='filter_stage' ) call bogey_filter( params_physics, phi, phi_work, x0, dx )
+
         case('no_filter')
             ! nothing to do
 

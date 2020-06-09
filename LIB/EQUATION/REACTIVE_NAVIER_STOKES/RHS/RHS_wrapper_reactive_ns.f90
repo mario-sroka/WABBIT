@@ -132,7 +132,8 @@ subroutine RHS_wrapper_reactive_ns( params_physics, time, phi, phi_work, x0, dx,
 
                  !-------------------------------------------------------------------------
                  if (params_physics%d == 2) then
-                     ! /todo
+                     call RHS_2D_navier_stokes_non_reactive_periodicBC(params_physics, Ds, &
+                     Bs, g, NdF, x0, dx, phi(:,:,:,:), rhs(:,:,:,:), time)
                  else
                      call RHS_3D_navier_stokes_non_reactive_periodicBC(params_physics, Ds, &
                      Bs, g, NdF, x0, dx, phi(:,:,:,:), rhs(:,:,:,:), time)

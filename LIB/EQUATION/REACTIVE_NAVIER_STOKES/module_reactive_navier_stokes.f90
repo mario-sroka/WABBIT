@@ -67,6 +67,8 @@ module module_reactive_navier_stokes
     include "IO/compute_temperature.f90"
     include "IO/compute_pressure.f90"
     include "IO/compute_reaction_rate.f90"
+    include "IO/convert_to_conservative.f90"
+    include "IO/convert_from_conservative.f90"
     !--------------------------------------------------
 
     !----- INI ----------------------------------------
@@ -76,6 +78,7 @@ module module_reactive_navier_stokes
     include "INI/inicond_blob.f90"
     include "INI/inicond_taylor_green.f90"
     include "INI/inicond_vortex.f90"
+    include "INI/inicond_double_shear_layer.f90"
     !--------------------------------------------------
 
     !----- FILTER -------------------------------------
@@ -83,6 +86,7 @@ module module_reactive_navier_stokes
     include "FILTER/explicit_filter.f90"
     include "FILTER/filter_1D.f90"
     include "FILTER/spectral_filter.f90"
+    include "FILTER/bogey_filter.f90"
     !--------------------------------------------------
 
     !----- RHS ----------------------------------------
@@ -96,6 +100,7 @@ module module_reactive_navier_stokes
     include "RHS/boundaries_xyz.f90"
     include "RHS/set_penalization.f90"
     include "RHS/RHS_2D_CANTERA_navier_stokes_reactive_periodicBC.f90"
+    include "RHS/RHS_2D_navier_stokes_non_reactive_periodicBC.f90"
     !--------------------------------------------------
 
     !----- TIME ---------------------------------------

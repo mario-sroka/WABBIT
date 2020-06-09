@@ -248,7 +248,8 @@ $(OBJDIR)/module_reactive_navier_stokes.o: module_reactive_navier_stokes.f90 \
         STATISTICS/compute_DFT.f90 STATISTICS/compute_IDFT.f90 INI/inicond_taylor_green.f90 INI/ini_reactive_ns.f90 \
         RHS/RHS_3D_CANTERA_navier_stokes_reactive_non_periodicBC.f90 RHS/boundaries_xyz.f90 RHS/set_penalization.f90 \
         INI/inicond_vortex.f90 RHS/RHS_2D_CANTERA_navier_stokes_reactive_periodicBC.f90 RHS/diff_wrapper_2D.f90 FILTER/spectral_filter.f90 \
-        IO/compute_pressure.f90
+        IO/compute_pressure.f90 INI/inicond_double_shear_layer.f90 FILTER/bogey_filter.f90 IO/convert_to_conservative.f90 \
+        IO/convert_from_conservative.f90 RHS/RHS_2D_navier_stokes_non_reactive_periodicBC.f90
 	$(FC) $(FFLAGS) -c -o $@ $< $(LDFLAGS)
 
 $(OBJDIR)/module_timing.o: module_timing.f90

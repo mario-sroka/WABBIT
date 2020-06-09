@@ -113,7 +113,7 @@ subroutine save_data(iteration, time, params, lgt_block, hvy_block, lgt_active, 
             write( fname,'(a, "_", i12.12, ".h5")') trim(adjustl(tmp)), nint(time * 1.0e6_rk)
         else
             ! reactive navier stokes
-            write( fname,'(a, "_", i12.12, ".h5")') trim(adjustl(tmp)), nint(time * 1.0e9_rk)
+            write( fname,'(a, "_", i12.12, ".h5")') trim(adjustl(tmp)), nint(time * 1.0e9_rk, kind=8)
         end if
 
         ! actual writing

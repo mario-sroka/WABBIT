@@ -141,6 +141,11 @@ subroutine ini_reactive_ns( params_physics, phi, x0, dx, gas )
             params_physics%inicond_position(1:2) = dummy(1:2)
             params_physics%inicond_scales(1:2)   = dummy(3:4)
 
+        case ("dsl")
+            !---------------------------------------------------------------------------------------------
+            ! set double shear layer initial conditions
+            call inicond_double_shear_layer( params_physics, phi, x0, dx )
+
         case default
             call abort(091018002,"ERROR: unknown ini condition for reactive navier stokes.")
 

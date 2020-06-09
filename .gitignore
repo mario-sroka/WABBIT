@@ -27,7 +27,8 @@ doc/output
 runtime_control
 wabbit
 wabbit-post
-hdf2xmf.py
+*.py
 success
 *.txt
+hostfile*
 

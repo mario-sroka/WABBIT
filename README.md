@@ -55,7 +55,7 @@ where the --memory options allows you to approximately control how much memory i
             <th></th>
         </tr>
         <tr>
-            <td>2D inert gas</td>
+            <td style="padding:10px">2D inert gas</td>
             <td rowspan=10><img src="pics/rho.gif" width="70%"></td>
         </tr>
         <tr>

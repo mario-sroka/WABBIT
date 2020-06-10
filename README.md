@@ -49,7 +49,7 @@ where the --memory options allows you to approximately control how much memory i
 
 ## Test Cases
 
-<img src="pics/rho.png" width="40%">
+<img src="pics/rho.gif" width="100%">
 
 ## Publications
 

@@ -20,7 +20,7 @@ https://github.com/mario-sroka/WABBIT.git
 
 3. install [HDF5 library](https://www.hdfgroup.org/downloads/hdf5/source-code/ "HDF5 Source Code")
 
-necessary variables for WABBIT
+	necessary variables for WABBIT
 ```
 export HDF_ROOT=[...]
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HDF_ROOT/lib64

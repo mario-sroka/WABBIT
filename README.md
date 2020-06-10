@@ -49,12 +49,13 @@ where the --memory options allows you to approximately control how much memory i
 
 ## Test Cases
 
-|double shear layer||
-|---|---|
-|+ 2D inert gas
-+ test|<img src="pics/rho.gif" width="80%">|
-|+ size: 1mx1m||
-|+ fixed grid: 2048x2048||
+|double shear layer|
+|---|
+|+ 2D inert gas|
+|+ size: 1mx1m|
+|+ fixed grid: 2048x2048|
+
+<img src="pics/rho.gif" width="50%">
 
 ## Publications
 

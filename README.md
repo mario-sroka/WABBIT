@@ -62,21 +62,22 @@ where the --memory options allows you to approximately control how much memory i
             <td rowspan=4><img src="pics/rho.gif" width="50%"></td>
         </tr>
         <tr>
-            <td>...</td>
+            <td>- 2D inert gas</td>
         </tr>
         <tr>
-            <td>...</td>
+            <td>- size: 1mx1m</td>
+        </tr>
+        <tr>
+            <td>- grid: 2048x2048</td>
+        </tr>
+        <tr>
+            <td>- periodic boundaries</td>
+        </tr>
+        <tr>
+            <td>- shock filtering <a href="https://doi.org/10.1016/j.jcp.2008.10.042">[Bogey2009]</a></td>
         </tr>
     </tbody>
 </table>
-
-|double shear layer|
-|---|
-|+ 2D inert gas|
-|+ size: 1mx1m|
-|+ fixed grid: 2048x2048|
-
-<img src="pics/rho.gif" width="50%">
 
 ## Publications
 

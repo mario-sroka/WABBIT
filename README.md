@@ -59,7 +59,7 @@ where the --memory options allows you to approximately control how much memory i
     <tbody>
         <tr>
             <td>2D inert gas</td>
-            <td rowspan=5><img src="pics/rho.gif" width="70%"></td>
+            <td rowspan=10><img src="pics/rho.gif" width="70%"></td>
         </tr>
         <tr>
             <td>- size: 1mx1m</td>
@@ -73,6 +73,11 @@ where the --memory options allows you to approximately control how much memory i
         <tr>
             <td>- shock filtering <a href="https://doi.org/10.1016/j.jcp.2008.10.042">[Bogey2009]</a></td>
         </tr>
+        <tr><td></td></tr>
+        <tr><td></td></tr>
+        <tr><td></td></tr>
+        <tr><td></td></tr>
+        <tr><td></td></tr>
     </tbody>
 </table>
 

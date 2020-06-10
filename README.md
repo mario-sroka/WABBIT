@@ -51,7 +51,8 @@ where the --memory options allows you to approximately control how much memory i
 
 |double shear layer||
 |---|---|
-|+ 2D inert gas|<img src="pics/rho.gif" width="80%">|
+|+ 2D inert gas
++ test|<img src="pics/rho.gif" width="80%">|
 |+ size: 1mx1m||
 |+ fixed grid: 2048x2048||
 

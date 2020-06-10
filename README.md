@@ -55,9 +55,11 @@ wabbit [path_to_your_ini_filename.ini]
         <tr>
             <td rowspan=10>
 <ul style="list-style-type:disc;">
-  <li>Coffee</li>
-  <li>Tea</li>
-  <li>Milk</li>
+  <li>2D inert gas</li>
+  <li>Domain size: 1mx1m</li>
+  <li>grid: 2048x2048</li>
+  <li>periodic boundaries</li>
+  <li>shock filtering <a href="https://doi.org/10.1016/j.jcp.2008.10.042">[Bogey2009]</a></li>
 </ul>
 </td>
             <td rowspan=10><img src="pics/rho.gif" width="70%"></td>

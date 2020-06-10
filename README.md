@@ -25,3 +25,14 @@ https://github.com/mario-sroka/WABBIT.git
 export HDF_ROOT=[...]
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HDF_ROOT/lib64
 ```
+
+4. install [CANTERA library](https://www.cantera.org/), build FORTRAN module
+
+	set up variables for WABBIT
+```
+export CANTERA_ROOT=[.../cantera_install]
+export CANTERA_DATA=[.../cantera/data/inputs]
+export PKG_CONFIG_PATH=[.../cantera_install/lib64/pkgconfig]
+export PATH=$PATH:[.../cantera_install/bin]
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CANTERA_ROOT/lib64
+```

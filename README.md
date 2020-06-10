@@ -50,35 +50,31 @@ where the --memory options allows you to approximately control how much memory i
 ## Test Cases
 
 <table>
-    <thead>
         <tr>
             <th>double shear layer</th>
             <th></th>
         </tr>
-    </thead>
-    <tbody>
         <tr>
             <td>2D inert gas</td>
             <td rowspan=10><img src="pics/rho.gif" width="70%"></td>
         </tr>
         <tr>
-            <td>- size: 1mx1m</td>
+            <td>size: 1mx1m</td>
         </tr>
         <tr>
-            <td>- grid: 2048x2048</td>
+            <td>grid: 2048x2048</td>
         </tr>
         <tr>
-            <td>- periodic boundaries</td>
+            <td>periodic boundaries</td>
         </tr>
         <tr>
-            <td>- shock filtering <a href="https://doi.org/10.1016/j.jcp.2008.10.042">[Bogey2009]</a></td>
+            <td>shock filtering <a href="https://doi.org/10.1016/j.jcp.2008.10.042">[Bogey2009]</a></td>
         </tr>
         <tr><td></td></tr>
         <tr><td></td></tr>
         <tr><td></td></tr>
         <tr><td></td></tr>
         <tr><td></td></tr>
-    </tbody>
 </table>
 
 ## Publications

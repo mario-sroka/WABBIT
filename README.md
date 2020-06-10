@@ -50,7 +50,8 @@ wabbit [path_to_your_ini_filename.ini]
 <table>
         <tr>
             <th>double shear layer</th>
-            <th></th>
+            <th>density</th>
+            <th>vorticity</th>
         </tr>
         <tr>
             <td rowspan=10>
@@ -63,6 +64,7 @@ wabbit [path_to_your_ini_filename.ini]
 </ul>
 </td>
             <td rowspan=10><img src="pics/rho.gif" width="70%"></td>
+            <td rowspan=10><img src="pics/vort.gif" width="70%"></td>
         </tr>
 </table>
 

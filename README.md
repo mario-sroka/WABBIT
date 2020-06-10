@@ -49,6 +49,27 @@ where the --memory options allows you to approximately control how much memory i
 
 ## Test Cases
 
+<table>
+    <thead>
+        <tr>
+            <th>double shear layer</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>2D inert gas</td>
+            <td rowspan=4><img src="pics/rho.gif" width="50%"></td>
+        </tr>
+        <tr>
+            <td>...</td>
+        </tr>
+        <tr>
+            <td>...</td>
+        </tr>
+    </tbody>
+</table>
+
 |double shear layer|
 |---|
 |+ 2D inert gas|

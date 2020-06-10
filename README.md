@@ -7,3 +7,11 @@ New in comparison to WABBIT are:
 
 + reactive navier stokes physics
 + turbulence forcing
+
+# INSTALL
+
+1. clone from git
+
+```
+https://github.com/mario-sroka/WABBIT.git
+```

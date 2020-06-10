@@ -59,10 +59,7 @@ where the --memory options allows you to approximately control how much memory i
     <tbody>
         <tr>
             <td>2D inert gas</td>
-            <td rowspan=4><img src="pics/rho.gif" width="50%"></td>
-        </tr>
-        <tr>
-            <td>- 2D inert gas</td>
+            <td rowspan=5><img src="pics/rho.gif" width="70%"></td>
         </tr>
         <tr>
             <td>- size: 1mx1m</td>

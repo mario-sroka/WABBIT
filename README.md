@@ -49,7 +49,9 @@ where the --memory options allows you to approximately control how much memory i
 
 ## Test Cases
 
-<img src="pics/rho.gif" width="100%">
+|double shear layer||
+|---|---|
+||<img src="pics/rho.gif" width="100%">|
 
 ## Publications
 

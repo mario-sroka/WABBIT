@@ -54,11 +54,11 @@ wabbit [path_to_your_ini_filename.ini]
         </tr>
         <tr>
             <td rowspan=10>
-2D inert gas
-size: 1mx1m
-size: 1mx1m
-size: 1mx1m
-size: 1mx1m
+<ul style="list-style-type:disc;">
+  <li>Coffee</li>
+  <li>Tea</li>
+  <li>Milk</li>
+</ul>
 </td>
             <td rowspan=10><img src="pics/rho.gif" width="70%"></td>
         </tr>

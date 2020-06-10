@@ -49,7 +49,7 @@ where the --memory options allows you to approximately control how much memory i
 
 ## Test Cases
 
-![test](pics/rho.png | width=100)
+![test](pics/rho.png = 100x100)
 
 ## Publications
 

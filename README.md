@@ -63,8 +63,8 @@ wabbit [path_to_your_ini_filename.ini]
   <li>shock filtering <a href="https://doi.org/10.1016/j.jcp.2008.10.042">[Bogey2009]</a></li>
 </ul>
 </td>
-            <td rowspan=10><img src="pics/rho.gif" width="60%" class="center"></td>
-            <td rowspan=10><img src="pics/vort.gif" width="60%" class="center"></td>
+            <td rowspan=10><img src="pics/rho.gif" width="80%"></td>
+            <td rowspan=10><img src="pics/vort.gif" width="80%"></td>
         </tr>
 </table>
 

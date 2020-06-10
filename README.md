@@ -45,8 +45,6 @@ Customize the .ini-files in CASES directory, run WABBIT with .ini-file name
 wabbit [path_to_your_ini_filename.ini] 
 ```
 
-where the --memory options allows you to approximately control how much memory is globally allocated, i.e., on all ranks. Note that WABBIT does not free memory which is once allocated again during runtime. This is because we intent to use clusters, where the globally available memory is reserved for the exectution.
-
 ## Test Cases
 
 <table>
@@ -55,8 +53,8 @@ where the --memory options allows you to approximately control how much memory i
             <th></th>
         </tr>
         <tr>
-            <td style="padding:5px">2D inert gas</td>
-            <td rowspan=10><img src="pics/rho.gif" width="70%"></td>
+            <td>2D inert gas</td>
+            <td rowspan=10></td>
         </tr>
         <tr>
             <td>size: 1mx1m</td>
